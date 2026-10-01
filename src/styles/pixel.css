@@ -1,0 +1,617 @@
+/* ========================================================
+   PIXELDESK DESIGN SYSTEM & TOKENS
+   Mature Retro-Productivity Browser Desktop
+   ======================================================== */
+
+:root {
+  /* ======================================================
+     Core Palette Specification:
+     - Deep Navy:     #24324A (Desktop bg, primary text, borders, system chrome)
+     - Warm Cream:    #F7F1E3 (Application windows, panels, content surfaces)
+     - Muted Teal:    #4E9F9A (Productivity, active states, success, focus)
+     - Coral:         #E76F51 (Primary actions, controls, warnings)
+     - Golden Yellow: #E9C46A (Highlights, reminders, achievements)
+     - Muted Lavender:#8D86C9 (Secondary features, AI, notes, customization)
+     ====================================================== */
+
+  --color-navy: #24324A;
+  --color-navy-dark: #182232;
+  --color-navy-light: #2E3E5B;
+  --color-cream: #F7F1E3;
+  --color-cream-panel: #EDE5D3;
+  --color-cream-card: #FFFFFF;
+  --color-teal: #4E9F9A;
+  --color-teal-hover: #438A85;
+  --color-teal-light: #E6F3F2;
+  --color-coral: #E76F51;
+  --color-coral-hover: #D45D3F;
+  --color-coral-light: #FDF0ED;
+  --color-yellow: #E9C46A;
+  --color-yellow-dark: #D4AF53;
+  --color-yellow-light: #FDF8EB;
+  --color-lavender: #8D86C9;
+  --color-lavender-dark: #7870B8;
+  --color-lavender-light: #F1EFF9;
+
+  /* Default Theme: Retro Navy & Cream */
+  --bg-primary: #24324A;               /* Deep Navy desktop background */
+  --bg-secondary: #182232;
+  --desktop-bg: #24324A;
+  --desktop-text: #F7F1E3;             /* Warm cream text on desktop */
+  --desktop-text-muted: #B8C4D6;
+
+  /* Readable Content Surfaces */
+  --surface: #F7F1E3;                  /* Warm Cream application window surface */
+  --surface-dark: #EDE5D3;             /* Warm Cream sub-panels and sections */
+  --surface-card: #FFFFFF;             /* Crisp white readable card */
+  --surface-accent: #E6F3F2;
+
+  /* Text Roles */
+  --text-primary: #24324A;             /* Deep Navy primary text on windows */
+  --text-secondary: #566885;           /* Muted navy for secondary labels */
+  --text-muted: #7A899E;
+  --text-on-navy: #F7F1E3;
+
+  /* Borders & Shadows */
+  --border: #24324A;                   /* Deep Navy borders */
+  --border-subtle: #4A5B78;
+  --border-panel: #24324A;
+  --shadow: #141C2A;                   /* Sharp dark navy pixel drop shadow */
+
+  /* Functional Accents */
+  --accent: #4E9F9A;                   /* Teal: productivity / active states */
+  --accent-teal: #4E9F9A;
+  --accent-coral: #E76F51;             /* Coral: primary actions */
+  --accent-yellow: #E9C46A;            /* Yellow: highlights & reminders */
+  --accent-lavender: #8D86C9;          /* Lavender: AI, notes & customization */
+  --accent-light: #E6F3F2;             /* Subtle teal tint */
+  --highlight: #E76F51;
+
+  /* System Chrome (Deep Navy) */
+  --topbar-bg: #24324A;
+  --topbar-border: #182232;
+  --topbar-text: #F7F1E3;
+  --dock-bg: rgba(36, 50, 74, 0.94);
+  --dock-border: #182232;
+  --dock-item-bg: #F7F1E3;
+  --dock-item-border: #24324A;
+
+  /* Window Chrome */
+  --window-header: #24324A;
+  --window-header-text: #F7F1E3;
+  --window-header-inactive: #EDE5D3;
+  --window-header-inactive-text: #24324A;
+
+  /* Typography */
+  --font-pixel: 'Press Start 2P', monospace;
+  --font-retro: 'VT323', monospace;
+  --font-body: 'Outfit', system-ui, -apple-system, sans-serif;
+
+  /* Pixel Sizing Tokens */
+  --pixel-border-width: 2px;
+  --pixel-border: 2px solid var(--border);
+  --pixel-border-thick: 3px solid var(--border);
+  --pixel-shadow: 4px 4px 0px var(--shadow);
+  --pixel-shadow-sm: 2px 2px 0px var(--shadow);
+  --pixel-shadow-lg: 6px 6px 0px var(--shadow);
+
+  /* Animation Durations */
+  --transition-speed: 0.15s;
+}
+
+/* Alternate Theme: Warm Cream Studio (Light Desk Mode) */
+[data-theme="warm-cream"] {
+  --bg-primary: #EDE5D3;
+  --bg-secondary: #DFD5BF;
+  --desktop-bg: #EDE5D3;
+  --desktop-text: #24324A;
+  --desktop-text-muted: #566885;
+
+  --surface: #FDFBF7;
+  --surface-dark: #F2ECE0;
+  --surface-card: #FFFFFF;
+
+  --text-primary: #24324A;
+  --text-secondary: #566885;
+
+  --border: #24324A;
+  --shadow: #24324A;
+
+  --topbar-bg: #24324A;
+  --topbar-border: #182232;
+  --topbar-text: #F7F1E3;
+  --dock-bg: rgba(36, 50, 74, 0.94);
+  --dock-border: #182232;
+
+  --window-header: #24324A;
+  --window-header-text: #F7F1E3;
+  --window-header-inactive: #E5DDCB;
+  --window-header-inactive-text: #24324A;
+}
+
+/* Alternate Theme: Midnight Console (Night Shift Mode) */
+[data-theme="midnight"] {
+  --bg-primary: #161F2E;
+  --bg-secondary: #0E1520;
+  --desktop-bg: #161F2E;
+  --desktop-text: #F7F1E3;
+  --desktop-text-muted: #8E9BAF;
+
+  --surface: #EFE9DA;
+  --surface-dark: #DDD4C0;
+  --surface-card: #FDFBF7;
+
+  --text-primary: #182232;
+  --text-secondary: #485873;
+
+  --border: #182232;
+  --shadow: #080D14;
+
+  --topbar-bg: #1A2436;
+  --topbar-border: #0E1520;
+  --topbar-text: #F7F1E3;
+  --dock-bg: rgba(22, 31, 46, 0.95);
+  --dock-border: #0E1520;
+
+  --window-header: #1A2436;
+  --window-header-text: #F7F1E3;
+  --window-header-inactive: #D5CCA8;
+  --window-header-inactive-text: #182232;
+}
+
+/* Legacy fallback: pink mapped directly to default navy/cream */
+[data-theme="pink"] {
+  --bg-primary: #24324A;
+  --desktop-bg: #24324A;
+  --desktop-text: #F7F1E3;
+  --surface: #F7F1E3;
+  --surface-dark: #EDE5D3;
+  --text-primary: #24324A;
+  --border: #24324A;
+  --shadow: #141C2A;
+  --window-header: #24324A;
+  --window-header-text: #F7F1E3;
+}
+
+/* Reduced Motion and Animations Toggle */
+.reduced-motion *,
+.animations-off * {
+  animation: none !important;
+  transition: none !important;
+}
+
+/* ========================================================
+   Pixel Base Component Styles
+   ======================================================== */
+
+.pixel-box {
+  background-color: var(--surface);
+  border: var(--pixel-border);
+  box-shadow: var(--pixel-shadow);
+  position: relative;
+}
+
+/* Standard Button: Warm Cream surface with crisp Navy border */
+.pixel-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-pixel);
+  font-size: 10px;
+  line-height: 1.4;
+  padding: 8px 14px;
+  background-color: var(--surface);
+  color: var(--text-primary);
+  border: var(--pixel-border);
+  box-shadow: var(--pixel-shadow-sm);
+  cursor: pointer;
+  user-select: none;
+  text-decoration: none;
+  border-radius: 0px;
+  transition: transform var(--transition-speed) ease, box-shadow var(--transition-speed) ease, background-color var(--transition-speed) ease;
+}
+
+.pixel-button:hover {
+  background-color: var(--color-teal-light);
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0px var(--shadow);
+}
+
+.pixel-button:active {
+  transform: translate(2px, 2px);
+  box-shadow: 0px 0px 0px var(--shadow);
+}
+
+/* Primary Action Button: Coral (#E76F51) */
+.pixel-button-primary {
+  background-color: var(--color-coral);
+  color: #ffffff;
+  border-color: var(--border);
+}
+
+.pixel-button-primary:hover {
+  background-color: var(--color-coral-hover);
+  color: #ffffff;
+}
+
+/* Small Button Variant */
+.pixel-button-sm {
+  padding: 4px 8px;
+  font-size: 8px;
+}
+
+/* Functional Tag / Badge Component */
+.pixel-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-pixel);
+  font-size: 8px;
+  padding: 3px 6px;
+  border: 1px solid var(--border);
+  background-color: var(--surface-dark);
+  color: var(--text-primary);
+  box-shadow: 1px 1px 0 var(--shadow);
+  border-radius: 0px;
+}
+
+.pixel-button-teal {
+  background-color: var(--color-teal);
+  color: #ffffff;
+  border-color: var(--border);
+}
+
+.pixel-button-teal:hover {
+  background-color: var(--color-teal-hover);
+  color: #ffffff;
+}
+
+/* Pixel Form Inputs */
+.pixel-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: left;
+  width: 100%;
+}
+
+.pixel-label {
+  font-family: var(--font-pixel);
+  font-size: 9px;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.pixel-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.pixel-input {
+  width: 100%;
+  font-family: var(--font-body);
+  font-size: 13.5px;
+  padding: 8px 10px;
+  background-color: #ffffff;
+  color: var(--text-primary);
+  border: 2px solid var(--border);
+  box-shadow: 2px 2px 0 var(--shadow);
+  border-radius: 0px;
+  outline: none;
+  transition: border-color var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
+}
+
+.pixel-input:focus {
+  border-color: var(--color-teal);
+  box-shadow: 2px 2px 0 var(--color-teal);
+}
+
+.pixel-input.error {
+  border-color: var(--color-coral);
+  box-shadow: 2px 2px 0 var(--color-coral);
+}
+
+.pixel-input:disabled {
+  background-color: var(--surface-dark);
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.pixel-error-message {
+  font-family: var(--font-pixel);
+  font-size: 8px;
+  color: var(--color-coral);
+  line-height: 1.4;
+  margin-top: 2px;
+}
+
+.pixel-toggle-visibility-btn {
+  position: absolute;
+  right: 6px;
+  background: var(--surface-dark);
+  border: 1px solid var(--border);
+  font-family: var(--font-retro);
+  font-size: 13px;
+  color: var(--text-primary);
+  padding: 2px 6px;
+  cursor: pointer;
+  border-radius: 0px;
+  user-select: none;
+}
+
+.pixel-toggle-visibility-btn:hover {
+  background: var(--color-teal-light);
+  color: var(--color-navy);
+}
+
+.pixel-tag-teal {
+  background-color: var(--color-teal);
+  color: #ffffff;
+}
+
+.pixel-tag-coral {
+  background-color: var(--color-coral);
+  color: #ffffff;
+}
+
+.pixel-tag-yellow {
+  background-color: var(--color-yellow);
+  color: var(--color-navy);
+}
+
+.pixel-tag-lavender {
+  background-color: var(--color-lavender);
+  color: #ffffff;
+}
+
+/* Retro Pixel Panel */
+.pixel-panel {
+  background: var(--surface);
+  border: var(--pixel-border);
+  box-shadow: var(--pixel-shadow);
+  border-radius: 0px;
+}
+
+/* Pixel Checkbox / Toggle Button */
+.pixel-toggle-btn {
+  font-family: var(--font-pixel);
+  font-size: 9px;
+  padding: 6px 12px;
+  border: 2px solid var(--border);
+  background: var(--surface-dark);
+  color: var(--text-primary);
+  cursor: pointer;
+  border-radius: 0px;
+  transition: all 0.15s ease;
+}
+
+/* Active State: Muted Teal (#4E9F9A) */
+.pixel-toggle-btn.active {
+  background: var(--color-teal);
+  color: #ffffff;
+  border-color: var(--border);
+  box-shadow: inset 2px 2px 0 rgba(0, 0, 0, 0.25);
+}
+
+/* Desktop Icon Interactive States */
+.desktop-icon:hover .icon-art-box {
+  transform: translateY(-2px);
+  box-shadow: var(--pixel-shadow);
+  border-color: var(--color-teal);
+}
+
+.desktop-icon:focus-visible {
+  outline: 2px dashed var(--color-teal);
+  outline-offset: 2px;
+}
+
+/* Dock Item Interactive States */
+.dock-item-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--pixel-shadow);
+  border-color: var(--color-teal);
+}
+
+/* Window Control Buttons */
+.win-btn {
+  border-radius: 0px;
+  transition: filter var(--transition-speed) ease, transform var(--transition-speed) ease;
+}
+
+.win-btn:hover {
+  filter: brightness(1.1);
+  transform: translate(-0.5px, -0.5px);
+}
+
+.win-btn:active {
+  transform: translate(1px, 1px);
+  box-shadow: none;
+}
+
+/* Close Control: Coral (#E76F51) */
+.win-btn-close {
+  background-color: var(--color-coral) !important;
+  color: #ffffff !important;
+}
+
+.win-btn-close:hover {
+  background-color: var(--color-coral-hover) !important;
+}
+
+/* Subtle, Tasteful Animations */
+@keyframes floatGentle {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes twinkle {
+  0%, 100% {
+    opacity: 0.35;
+    transform: scale(0.9);
+  }
+  50% {
+    opacity: 0.95;
+    transform: scale(1.1);
+  }
+}
+
+@keyframes windowPop {
+  0% {
+    opacity: 0;
+    transform: scale(0.97) translateY(6px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.animate-window-pop {
+  animation: windowPop 0.16s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes pixelPageFade {
+  0% {
+    opacity: 0;
+    transform: scale(0.985);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.pixel-page-transition {
+  animation: pixelPageFade 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-float {
+  animation: floatGentle 5s ease-in-out infinite;
+}
+
+.animate-twinkle {
+  animation: twinkle 3s ease-in-out infinite;
+}
+
+/* ========================================================
+   RESPONSIVE LAYOUT & BREAKPOINTS
+   ======================================================== */
+
+@media (max-width: 768px) {
+  .topbar-date {
+    display: none;
+  }
+  .desktop-watermark {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .top-bar {
+    padding: 0 8px;
+    height: 36px;
+  }
+
+  .topbar-ver-badge {
+    display: none;
+  }
+
+  .topbar-status-text {
+    display: none;
+  }
+
+  .topbar-clock {
+    font-size: 15px !important;
+    padding: 2px 5px !important;
+  }
+
+  .desktop-icon-grid {
+    grid-template-columns: repeat(4, 1fr) !important;
+    max-width: 100% !important;
+    gap: 4px !important;
+    padding: 0 !important;
+  }
+
+  .desktop-icon {
+    width: auto !important;
+    min-height: 72px !important;
+    margin: 2px !important;
+    padding: 4px 2px !important;
+  }
+
+  .desktop-icon .icon-art-box {
+    width: 38px !important;
+    height: 38px !important;
+    font-size: 20px !important;
+    margin-bottom: 4px !important;
+  }
+
+  .desktop-icon span:last-child {
+    font-size: 8px !important;
+    line-height: 1.1 !important;
+  }
+
+  .pixel-window:not(.minimized) {
+    position: fixed !important;
+    top: 42px !important;
+    left: 8px !important;
+    right: 8px !important;
+    bottom: 68px !important;
+    width: auto !important;
+    max-width: none !important;
+    max-height: none !important;
+    height: auto !important;
+  }
+
+  .window-header {
+    cursor: default !important;
+    padding: 6px 8px !important;
+  }
+
+  .win-btn {
+    width: 24px !important;
+    height: 22px !important;
+    font-size: 10px !important;
+  }
+
+  .window-body {
+    padding: 12px 10px !important;
+  }
+
+  .pixel-dock-container {
+    bottom: 8px !important;
+    max-width: 98vw !important;
+  }
+
+  .pixel-dock {
+    gap: 4px !important;
+    padding: 4px 6px !important;
+  }
+
+  .dock-item-btn {
+    width: 36px !important;
+    height: 38px !important;
+  }
+
+  .dock-item-btn span:first-child {
+    font-size: 16px !important;
+  }
+
+  .desktop-decorations {
+    display: none;
+  }
+}
+
+@media (max-width: 375px) {
+  .desktop-icon-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+}
