@@ -608,6 +608,21 @@
   .desktop-decorations {
     display: none;
   }
+
+  /* Avatar Studio Responsive Mobile Layout */
+  .avatar-studio-layout {
+    flex-direction: column !important;
+    align-items: center !important;
+  }
+
+  .avatar-preview-column {
+    min-width: 100% !important;
+  }
+
+  .avatar-categories-column {
+    min-width: 100% !important;
+    width: 100% !important;
+  }
 }
 
 @media (max-width: 375px) {
@@ -615,3 +630,56 @@
     grid-template-columns: repeat(3, 1fr) !important;
   }
 }
+
+/* ========================================================
+   AVATAR STUDIO STYLES
+   ======================================================== */
+.avatar-studio-layout {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.avatar-layer-img {
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+  user-select: none;
+  pointer-events: none;
+}
+
+.avatar-option-btn:hover:not(.selected) {
+  background-color: var(--surface-dark) !important;
+  transform: translateY(-1px);
+}
+
+.avatar-option-btn:focus-visible {
+  outline: 2px solid var(--color-teal) !important;
+  outline-offset: 1px;
+}
+
+.avatar-export-btn:hover {
+  background-color: var(--color-teal-light) !important;
+  border-color: var(--color-teal) !important;
+}
+
+/* ========================================================
+   TASK MANAGER STYLES
+   ======================================================== */
+.task-item-card:hover:not(.task-completed) {
+  border-color: var(--color-teal);
+  box-shadow: 2px 2px 0 var(--shadow);
+}
+
+.task-checkbox-btn:hover {
+  border-color: var(--color-teal);
+  background-color: var(--color-teal-light);
+}
+
+.task-checkbox-btn:focus-visible {
+  outline: 2px solid var(--color-teal);
+  outline-offset: 1px;
+}
+
+

@@ -1,13 +1,24 @@
 export const APPS = [
   {
+    id: "avatar",
+    name: "Avatar Studio",
+    icon: "👤",
+    badge: "Studio",
+    status: "ready",
+    category: "Creative",
+    description: "Build your little pixel identity with custom skin, hair, eyes, outfits, and accessories.",
+    version: "v0.2 — Active",
+    accentType: "lavender"
+  },
+  {
     id: "tasks",
     name: "Tasks",
     icon: "📋",
     badge: "ToDo",
-    status: "coming-soon",
+    status: "ready",
     category: "Productivity",
-    description: "Pixel-styled task lists, priorities, subtasks, and focused daily checklists.",
-    version: "Planned for Level 2",
+    description: "Get things done, one pixel at a time. Track priorities, due dates, categories, and daily progress.",
+    version: "v0.3 — Active",
     accentType: "teal"
   },
   {

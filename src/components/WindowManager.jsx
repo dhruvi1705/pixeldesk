@@ -4,6 +4,8 @@ import { WelcomeWindow } from "./WelcomeWindow";
 import { SettingsWindow } from "./SettingsWindow";
 import { HelpWindow } from "./HelpWindow";
 import { ComingSoonWindow } from "./ComingSoonWindow";
+import { AvatarStudio } from "./avatar/AvatarStudio";
+import { TaskWindow } from "./tasks/TaskWindow";
 import { APPS } from "../data/apps";
 
 export function WindowManager({
@@ -57,6 +59,20 @@ export function WindowManager({
               reducedMotion={reducedMotion}
               setReducedMotion={setReducedMotion}
               onResetDefaults={onResetDefaults}
+            />
+          );
+        } else if (win.id === "avatar") {
+          defaultWidth = 640;
+          content = (
+            <AvatarStudio
+              onClose={() => onCloseWindow("avatar")}
+            />
+          );
+        } else if (win.id === "tasks") {
+          defaultWidth = 520;
+          content = (
+            <TaskWindow
+              onClose={() => onCloseWindow("tasks")}
             />
           );
         } else if (win.id === "help") {
