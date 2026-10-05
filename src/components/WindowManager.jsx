@@ -6,6 +6,11 @@ import { HelpWindow } from "./HelpWindow";
 import { ComingSoonWindow } from "./ComingSoonWindow";
 import { AvatarStudio } from "./avatar/AvatarStudio";
 import { TaskWindow } from "./tasks/TaskWindow";
+import { NotesWindow } from "./notes/NotesWindow";
+import { CalendarWindow } from "./calendar/CalendarWindow";
+import { FocusWindow } from "./focus/FocusWindow";
+import { FinanceWindow } from "./finance/FinanceWindow";
+import { AnalyticsWindow } from "./analytics/AnalyticsWindow";
 import { APPS } from "../data/apps";
 
 export function WindowManager({
@@ -73,6 +78,42 @@ export function WindowManager({
           content = (
             <TaskWindow
               onClose={() => onCloseWindow("tasks")}
+            />
+          );
+        } else if (win.id === "notes") {
+          defaultWidth = 560;
+          content = (
+            <NotesWindow
+              onClose={() => onCloseWindow("notes")}
+            />
+          );
+        } else if (win.id === "calendar") {
+          defaultWidth = 590;
+          content = (
+            <CalendarWindow
+              onClose={() => onCloseWindow("calendar")}
+            />
+          );
+        } else if (win.id === "focus") {
+          defaultWidth = 440;
+          content = (
+            <FocusWindow
+              onClose={() => onCloseWindow("focus")}
+            />
+          );
+        } else if (win.id === "finance") {
+          defaultWidth = 480;
+          content = (
+            <FinanceWindow
+              onClose={() => onCloseWindow("finance")}
+            />
+          );
+        } else if (win.id === "analytics") {
+          defaultWidth = 640;
+          content = (
+            <AnalyticsWindow
+              onClose={() => onCloseWindow("analytics")}
+              onOpenApp={onOpenApp}
             />
           );
         } else if (win.id === "help") {

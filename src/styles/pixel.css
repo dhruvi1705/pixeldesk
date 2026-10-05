@@ -682,4 +682,99 @@
   outline-offset: 1px;
 }
 
+/* ========================================================
+   CALENDAR APPLICATION STYLES
+   ======================================================== */
+.calendar-day-cell:hover:not(.is-selected) {
+  border-color: var(--color-teal) !important;
+  background-color: var(--color-teal-light) !important;
+  transform: translateY(-1px);
+}
+
+.calendar-day-cell:focus-visible {
+  outline: 2px solid var(--color-teal) !important;
+  outline-offset: 1px;
+  z-index: 2;
+}
+
+.calendar-event-card:hover {
+  border-color: var(--color-teal);
+  transform: translateY(-1px);
+  box-shadow: 3px 3px 0 var(--shadow);
+}
+
+.calendar-events-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.calendar-events-scroll::-webkit-scrollbar-track {
+  background: var(--surface-dark);
+  border-left: 1px solid var(--border-subtle);
+}
+
+.calendar-events-scroll::-webkit-scrollbar-thumb {
+  background: var(--color-navy);
+}
+
+@media (max-width: 640px) {
+  .calendar-main-content-layout {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+  }
+
+  .focus-stats-history-row {
+    grid-template-columns: 1fr !important;
+  }
+
+  .analytics-two-column-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ========================================================
+   FOCUS APPLICATION STYLES
+   ======================================================== */
+.focus-timer-card {
+  transition: transform var(--transition-speed) ease;
+}
+
+/* ========================================================
+   FINANCE APPLICATION STYLES
+   ======================================================== */
+.transaction-item-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 2px 2px 0 var(--shadow);
+}
+
+.transactions-scroll-view::-webkit-scrollbar {
+  width: 6px;
+}
+
+.transactions-scroll-view::-webkit-scrollbar-track {
+  background: var(--surface-dark);
+  border-left: 1px solid var(--border-subtle);
+}
+
+.transactions-scroll-view::-webkit-scrollbar-thumb {
+  background: var(--color-navy);
+}
+
+/* ========================================================
+   ANALYTICS APPLICATION STYLES
+   ======================================================== */
+.analytics-dashboard-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.analytics-dashboard-scroll::-webkit-scrollbar-track {
+  background: var(--surface-dark);
+  border-left: 1px solid var(--border-subtle);
+}
+
+.analytics-dashboard-scroll::-webkit-scrollbar-thumb {
+  background: var(--color-navy);
+}
+
+
 
