@@ -18,14 +18,34 @@ export function NoteEditor({
   const [errorMsg, setErrorMsg] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
 
+  // Helper to emit companion notes events
+  const emitNotesEvent = (type) => {
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(
+        new CustomEvent("pixeldesk_notes_event", {
+          detail: { type, timestamp: new Date().toISOString() }
+        })
+      );
+    }
+  };
+
+  React.useEffect(() => {
+    emitNotesEvent("OPENED");
+    return () => {
+      emitNotesEvent("CLOSED");
+    };
+  }, []);
+
   const handleAddTag = (tag) => {
     if (!tags.includes(tag)) {
       setTags([...tags, tag]);
+      emitNotesEvent("EDITING");
     }
   };
 
   const handleRemoveTag = (tagToRemove) => {
     setTags(tags.filter((t) => t !== tagToRemove));
+    emitNotesEvent("EDITING");
   };
 
   const handleSubmit = (e) => {
@@ -42,6 +62,7 @@ export function NoteEditor({
       return;
     }
 
+    emitNotesEvent("SAVED");
     onSave({
       title: cleanTitle,
       content: cleanContent,
@@ -180,6 +201,7 @@ export function NoteEditor({
           onChange={(e) => {
             setTitle(e.target.value);
             if (errorMsg) setErrorMsg("");
+            emitNotesEvent("EDITING");
           }}
           placeholder="e.g. DAA Important Notes..."
           maxLength={100}
@@ -295,6 +317,7 @@ export function NoteEditor({
           onChange={(e) => {
             setContent(e.target.value);
             if (errorMsg) setErrorMsg("");
+            emitNotesEvent("EDITING");
           }}
           placeholder="Write your note here... (plain text with line breaks)"
           maxLength={5000}

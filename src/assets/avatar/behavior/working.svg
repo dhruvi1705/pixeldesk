@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" shape-rendering="crispEdges" width="100%" height="100%">
+  <!-- Mini Laptop & Desk in front of character -->
+  <rect x="2" y="27" width="28" height="4" fill="#24324A" />
+  <rect x="2" y="26" width="28" height="1" fill="#4A5B78" />
+  <rect x="3" y="27" width="26" height="1" fill="#8D86C9" />
+
+  <!-- Monitor stand & screen -->
+  <rect x="15" y="24" width="2" height="3" fill="#24324A" />
+  <rect x="10" y="17" width="12" height="8" fill="#24324A" />
+  <rect x="11" y="18" width="10" height="6" fill="#182232" />
+  <!-- Screen display pixels (code/terminal) -->
+  <rect x="12" y="19" width="4" height="1" fill="#4E9F9A" />
+  <rect x="12" y="21" width="7" height="1" fill="#F7F1E3" />
+  <rect x="12" y="22" width="5" height="1" fill="#E9C46A" />
+
+  <!-- Keyboard on desk -->
+  <rect x="11" y="27" width="10" height="1" fill="#F7F1E3" />
+  <rect x="12" y="27" width="1" height="1" fill="#24324A" />
+  <rect x="14" y="27" width="1" height="1" fill="#24324A" />
+  <rect x="16" y="27" width="1" height="1" fill="#24324A" />
+  <rect x="18" y="27" width="1" height="1" fill="#24324A" />
+
+  <!-- Typing hands -->
+  <rect x="8" y="25" width="3" height="2" fill="#24324A" />
+  <rect x="9" y="25" width="2" height="1" fill="#F4B886" />
+  <rect x="21" y="25" width="3" height="2" fill="#24324A" />
+  <rect x="21" y="25" width="2" height="1" fill="#F4B886" />
+</svg>

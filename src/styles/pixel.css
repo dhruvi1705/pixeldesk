@@ -776,5 +776,263 @@
   background: var(--color-navy);
 }
 
+/* ========================================================
+   PIXEL COMPANION STYLES & ANIMATIONS
+   ======================================================== */
+.desktop-companion-station {
+  position: absolute;
+  top: 20px;
+  right: 24px;
+  z-index: 3;
+  transition: transform var(--transition-speed) ease;
+}
 
+.pixel-companion-card {
+  transition: border-color var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
+}
 
+.pixel-companion-card:hover {
+  box-shadow: 4px 4px 0 var(--shadow);
+}
+
+/* Companion Idle Animation */
+.companion-anim-idle {
+  animation: companionIdle 3.6s ease-in-out infinite;
+}
+
+@keyframes companionIdle {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+/* Companion Working & Writing Animation */
+.companion-anim-working,
+.companion-anim-writing {
+  animation: companionWorking 1.2s steps(2, end) infinite;
+}
+
+@keyframes companionWorking {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-1px);
+  }
+}
+
+/* Companion Focus Animation */
+.companion-anim-focusing {
+  animation: companionFocus 2.8s ease-in-out infinite;
+}
+
+@keyframes companionFocus {
+  0%, 100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 1px rgba(233, 196, 106, 0.5));
+  }
+  50% {
+    transform: scale(1.02);
+    filter: drop-shadow(0 0 4px rgba(233, 196, 106, 0.9));
+  }
+}
+
+/* Companion Break Animation */
+.companion-anim-break {
+  animation: companionBreak 3.5s ease-in-out infinite;
+}
+
+@keyframes companionBreak {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(1deg) translateY(1px);
+  }
+}
+
+/* Companion Celebrating Bounce Animation */
+.companion-anim-celebrating {
+  animation: companionBounce 0.65s cubic-bezier(0.28, 0.84, 0.42, 1) infinite;
+}
+
+@keyframes companionBounce {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  35% {
+    transform: translateY(-8px) scale(1.04);
+  }
+  65% {
+    transform: translateY(0) scale(0.98);
+  }
+  85% {
+    transform: translateY(-3px) scale(1.01);
+  }
+}
+
+/* Sparkle particles during celebration */
+.pixel-sparkle {
+  position: absolute;
+  font-family: var(--font-pixel);
+  font-size: 8px;
+  color: var(--color-yellow);
+  pointer-events: none;
+}
+
+.sparkle-1 { animation: sparkleTwinkle 0.8s ease-in-out infinite alternate; }
+.sparkle-2 { animation: sparkleTwinkle 0.9s ease-in-out 0.2s infinite alternate; }
+.sparkle-3 { animation: sparkleTwinkle 0.75s ease-in-out 0.4s infinite alternate; }
+.sparkle-4 { animation: sparkleTwinkle 0.85s ease-in-out 0.1s infinite alternate; }
+
+@keyframes sparkleTwinkle {
+  0% {
+    opacity: 0.2;
+    transform: scale(0.6) rotate(0deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1.15) rotate(45deg);
+  }
+}
+
+/* Companion Sleeping Animation */
+.companion-anim-sleeping {
+  animation: sleepBreathe 4s ease-in-out infinite;
+}
+
+@keyframes sleepBreathe {
+  0%, 100% {
+    transform: translateY(0);
+    opacity: 0.95;
+  }
+  50% {
+    transform: translateY(1.5px);
+    opacity: 0.85;
+  }
+}
+
+/* Zzz particle animations */
+.zzz-particle {
+  display: block;
+  opacity: 0;
+  line-height: 1;
+}
+
+.zzz-1 { animation: zzzFloat 2.4s ease-in-out infinite; }
+.zzz-2 { animation: zzzFloat 2.4s ease-in-out 0.7s infinite; }
+.zzz-3 { animation: zzzFloat 2.4s ease-in-out 1.4s infinite; }
+
+@keyframes zzzFloat {
+  0% {
+    opacity: 0;
+    transform: translateY(3px) translateX(0);
+  }
+  30% {
+    opacity: 0.9;
+  }
+  80% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-10px) translateX(4px);
+  }
+}
+
+/* Companion Waking Animation */
+.companion-anim-waking {
+  animation: companionWake 0.7s ease-out 1;
+}
+
+@keyframes companionWake {
+  0% {
+    transform: translateY(3px) scale(0.96);
+  }
+  60% {
+    transform: translateY(-4px) scale(1.03);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Companion Inspecting Animation (Calendar, Finance, Analytics) */
+.companion-anim-calendar,
+.companion-anim-finance,
+.companion-anim-analytics {
+  animation: companionInspect 2.5s ease-in-out infinite;
+}
+
+@keyframes companionInspect {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-1px);
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .desktop-companion-station {
+    top: auto;
+    bottom: 68px;
+    right: 12px;
+  }
+  .pixel-companion-card {
+    width: 116px !important;
+    padding: 6px !important;
+  }
+}
+
+@media (max-width: 500px) {
+  .desktop-companion-station {
+    bottom: 54px;
+    right: 6px;
+  }
+  .pixel-companion-card {
+    width: 106px !important;
+    padding: 4px !important;
+  }
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  .companion-anim-idle,
+  .companion-anim-working,
+  .companion-anim-writing,
+  .companion-anim-focusing,
+  .companion-anim-break,
+  .companion-anim-celebrating,
+  .companion-anim-sleeping,
+  .companion-anim-waking,
+  .companion-anim-calendar,
+  .companion-anim-finance,
+  .companion-anim-analytics,
+  .zzz-particle,
+  .pixel-sparkle {
+    animation: none !important;
+    transform: none !important;
+  }
+}
+
+.reduced-motion .companion-anim-idle,
+.reduced-motion .companion-anim-working,
+.reduced-motion .companion-anim-writing,
+.reduced-motion .companion-anim-focusing,
+.reduced-motion .companion-anim-break,
+.reduced-motion .companion-anim-celebrating,
+.reduced-motion .companion-anim-sleeping,
+.reduced-motion .companion-anim-waking,
+.reduced-motion .companion-anim-calendar,
+.reduced-motion .companion-anim-finance,
+.reduced-motion .companion-anim-analytics,
+.reduced-motion .zzz-particle,
+.reduced-motion .pixel-sparkle {
+  animation: none !important;
+  transform: none !important;
+}

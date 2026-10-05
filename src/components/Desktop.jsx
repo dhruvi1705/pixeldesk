@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import { DesktopIcon } from "./DesktopIcon";
 import { DesktopDecorations } from "./DesktopDecorations";
+import { PixelCompanion } from "./avatar/PixelCompanion";
 import { APPS } from "../data/apps";
 
-export function Desktop({ onOpenApp, animationsEnabled }) {
+export function Desktop({ onOpenApp, animationsEnabled, companion }) {
   const [selectedIconId, setSelectedIconId] = useState(null);
 
   // Desktop apps to display on the canvas
@@ -69,6 +70,18 @@ export function Desktop({ onOpenApp, animationsEnabled }) {
           />
         ))}
       </section>
+
+      {/* Pixel Companion Station */}
+      {companion && (
+        <div className="desktop-companion-station">
+          <PixelCompanion
+            avatar={companion.avatarConfig}
+            state={companion.state}
+            message={companion.message}
+            onOpenStudio={() => onOpenApp("avatar")}
+          />
+        </div>
+      )}
 
       {/* Decorative Brand Watermark in bottom corner */}
       <div

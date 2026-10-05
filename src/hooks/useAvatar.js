@@ -78,6 +78,7 @@ export function useAvatar() {
       // Dispatch custom event so other components can listen if needed
       if (typeof window !== "undefined") {
         window.dispatchEvent(new CustomEvent("pixeldesk_avatar_changed", { detail: avatarConfig }));
+        window.dispatchEvent(new CustomEvent("pixeldesk_avatar_updated", { detail: avatarConfig }));
       }
       return true;
     } catch (err) {

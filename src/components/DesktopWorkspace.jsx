@@ -3,6 +3,7 @@ import { TopBar } from "./TopBar";
 import { Desktop } from "./Desktop";
 import { Dock } from "./Dock";
 import { WindowManager } from "./WindowManager";
+import { useCompanion } from "../hooks/useCompanion";
 
 export function DesktopWorkspace() {
   // 1. Persistent User Settings
@@ -57,6 +58,9 @@ export function DesktopWorkspace() {
       document.documentElement.classList.remove("reduced-motion");
     }
   }, [reducedMotion]);
+
+  // Pixel Companion State
+  const companion = useCompanion();
 
   // 2. Window Management State
   const [zIndexCounter, setZIndexCounter] = useState(20);
@@ -205,6 +209,7 @@ export function DesktopWorkspace() {
       <Desktop
         onOpenApp={handleOpenApp}
         animationsEnabled={animationsEnabled && !reducedMotion}
+        companion={companion}
       />
 
       {/* Layered Window Manager */}

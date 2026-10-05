@@ -26,6 +26,19 @@ export function AnalyticsWindow({
     refresh
   } = useAnalytics();
 
+  React.useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(
+        new CustomEvent("pixeldesk_companion_event", {
+          detail: {
+            type: "ANALYTICS",
+            timestamp: new Date().toISOString()
+          }
+        })
+      );
+    }
+  }, []);
+
   return (
     <div
       className="analytics-app-window"

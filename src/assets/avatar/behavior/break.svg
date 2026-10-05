@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" shape-rendering="crispEdges" width="100%" height="100%">
+  <!-- Relaxed Smiling Eyes -->
+  <rect x="11" y="13" width="3" height="1" fill="#24324A" />
+  <rect x="13" y="14" width="1" height="1" fill="#24324A" />
+  <rect x="18" y="13" width="3" height="1" fill="#24324A" />
+  <rect x="18" y="14" width="1" height="1" fill="#24324A" />
+
+  <!-- Gentle Smile -->
+  <rect x="15" y="16" width="3" height="1" fill="#E76F51" />
+
+  <!-- Pixel Coffee Mug in Hand (right side) -->
+  <!-- Hand grasping handle -->
+  <rect x="20" y="24" width="2" height="3" fill="#24324A" />
+  <rect x="20" y="24" width="2" height="2" fill="#F4B886" />
+
+  <!-- Mug body -->
+  <rect x="22" y="22" width="6" height="6" fill="#24324A" />
+  <rect x="23" y="23" width="4" height="4" fill="#E76F51" />
+  <rect x="23" y="23" width="4" height="1" fill="#663B19" />
+
+  <!-- Handle -->
+  <rect x="28" y="23" width="2" height="4" fill="#24324A" />
+  <rect x="28" y="24" width="1" height="2" fill="#F7F1E3" />
+
+  <!-- Floating Steam Dots -->
+  <rect x="24" y="20" width="1" height="1" fill="#8D86C9" opacity="0.8" />
+  <rect x="25" y="18" width="1" height="1" fill="#8D86C9" opacity="0.6" />
+  <rect x="24" y="16" width="1" height="1" fill="#8D86C9" opacity="0.4" />
+</svg>

@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" shape-rendering="crispEdges" width="100%" height="100%">
+  <!-- Concentration Brow & Focused Pupils -->
+  <rect x="11" y="12" width="4" height="1" fill="#24324A" />
+  <rect x="17" y="12" width="4" height="1" fill="#24324A" />
+  <rect x="12" y="13" width="2" height="2" fill="#24324A" />
+  <rect x="13" y="13" width="1" height="1" fill="#FFFFFF" />
+  <rect x="18" y="13" width="2" height="2" fill="#24324A" />
+  <rect x="19" y="13" width="1" height="1" fill="#FFFFFF" />
+
+  <!-- Focused Desk Lamp on the right -->
+  <!-- Lamp Base -->
+  <rect x="24" y="26" width="5" height="2" fill="#24324A" />
+  <rect x="25" y="26" width="3" height="1" fill="#E9C46A" />
+  <!-- Stem -->
+  <rect x="26" y="18" width="1" height="8" fill="#24324A" />
+  <rect x="25" y="18" width="1" height="8" fill="#D4AF53" />
+  <!-- Arm angled toward desk -->
+  <rect x="22" y="16" width="4" height="2" fill="#24324A" />
+  <rect x="22" y="16" width="4" height="1" fill="#E9C46A" />
+  <!-- Lamp shade -->
+  <rect x="19" y="16" width="4" height="3" fill="#24324A" />
+  <rect x="20" y="16" width="3" height="2" fill="#E9C46A" />
+  <rect x="20" y="19" width="3" height="1" fill="#FFF8EB" />
+  <!-- Subtle warm ambient cone -->
+  <rect x="18" y="20" width="7" height="2" fill="#E9C46A" opacity="0.25" />
+  <rect x="15" y="22" width="12" height="4" fill="#E9C46A" opacity="0.18" />
+
+  <!-- Compact desk & mini monitor -->
+  <rect x="4" y="27" width="20" height="4" fill="#24324A" />
+  <rect x="12" y="20" width="8" height="6" fill="#24324A" />
+  <rect x="13" y="21" width="6" height="4" fill="#4E9F9A" />
+  <rect x="14" y="22" width="4" height="1" fill="#FFFFFF" />
+</svg>
