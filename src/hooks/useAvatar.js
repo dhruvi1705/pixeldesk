@@ -4,27 +4,30 @@ import {
   getRandomAvatarConfig,
   sanitizeAvatarConfig
 } from "../data/avatarOptions";
+import { scopedStorage } from "../utils/storage";
 
-const STORAGE_KEY = "pixeldesk_avatar";
+const STORAGE_KEY = "avatar";
 
 export function useAvatar() {
   const [avatarConfig, setAvatarConfig] = useState(() => {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
+      const stored = scopedStorage.getItem(STORAGE_KEY);
       if (stored) {
-        return sanitizeAvatarConfig(JSON.parse(stored));
+        const parsed = typeof stored === "string" ? JSON.parse(stored) : stored;
+        return sanitizeAvatarConfig(parsed);
       }
     } catch (err) {
-      console.warn("Failed to load saved avatar from localStorage:", err);
+      console.warn("Failed to load saved avatar from scopedStorage:", err);
     }
     return { ...DEFAULT_AVATAR_CONFIG };
   });
 
   const [lastSavedConfig, setLastSavedConfig] = useState(() => {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
+      const stored = scopedStorage.getItem(STORAGE_KEY);
       if (stored) {
-        return sanitizeAvatarConfig(JSON.parse(stored));
+        const parsed = typeof stored === "string" ? JSON.parse(stored) : stored;
+        return sanitizeAvatarConfig(parsed);
       }
     } catch {
       // fallback
@@ -69,11 +72,11 @@ export function useAvatar() {
 
   const save = useCallback(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(avatarConfig));
+      scopedStorage.setItem(STORAGE_KEY, avatarConfig);
       setLastSavedConfig({ ...avatarConfig });
       setNotification({
         type: "success",
-        text: "Avatar saved locally."
+        text: "Avatar saved."
       });
       // Dispatch custom event so other components can listen if needed
       if (typeof window !== "undefined") {
@@ -82,10 +85,10 @@ export function useAvatar() {
       }
       return true;
     } catch (err) {
-      console.error("Failed to save avatar to localStorage:", err);
+      console.error("Failed to save avatar to scopedStorage:", err);
       setNotification({
         type: "error",
-        text: "Could not save avatar locally."
+        text: "Could not save avatar."
       });
       return false;
     }

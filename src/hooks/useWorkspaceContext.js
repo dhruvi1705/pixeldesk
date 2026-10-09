@@ -1,21 +1,22 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { scopedStorage } from "../utils/storage";
 
-const TASKS_KEY = "pixeldesk_tasks";
-const NOTES_KEY = "pixeldesk_notes";
-const EVENTS_KEY = "pixeldesk_events";
-const FOCUS_KEY = "pixeldesk_focus_sessions";
-const FINANCE_KEY = "pixeldesk_transactions";
+const TASKS_KEY = "tasks";
+const NOTES_KEY = "notes";
+const EVENTS_KEY = "events";
+const FOCUS_KEY = "focus_sessions";
+const FINANCE_KEY = "transactions";
 
-// Safely parse JSON from localStorage with fallbacks
+// Safely parse JSON from scopedStorage with fallbacks
 function safeParseStorage(key, fallback = []) {
   if (typeof window === "undefined") return fallback;
   try {
-    const raw = localStorage.getItem(key);
+    const raw = scopedStorage.getItem(key);
     if (!raw) return fallback;
-    const parsed = JSON.parse(raw);
+    const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
     return Array.isArray(parsed) ? parsed : fallback;
   } catch (err) {
-    console.warn(`[useWorkspaceContext] Failed to parse localStorage key "${key}":`, err);
+    console.warn(`[useWorkspaceContext] Failed to parse scopedStorage key "${key}":`, err);
     return fallback;
   }
 }
@@ -136,8 +137,10 @@ export function useWorkspaceContext() {
     // Overdue tasks (incomplete and dueDate < today)
     const overdue = tasks.filter((t) => !t.completed && t.dueDate && t.dueDate < todayStr);
 
-    // Upcoming tasks (incomplete and dueDate > today)
-    const upcoming = tasks.filter((t) => !t.completed && t.dueDate && t.dueDate > todayStr);
+    // Upcoming tasks (incomplete and dueDate > today), sorted chronologically
+    const upcoming = tasks
+      .filter((t) => !t.completed && t.dueDate && t.dueDate > todayStr)
+      .sort((a, b) => a.dueDate.localeCompare(b.dueDate));
 
     // Priorities among pending
     const highPriority = pending.filter((t) => t.priority === "High");
@@ -148,18 +151,32 @@ export function useWorkspaceContext() {
 
     return {
       total,
+      completed,
+      completedList: completed,
       completedCount: completed.length,
+      pending,
+      pendingList: pending,
       pendingCount: pending.length,
       dueToday,
+      dueTodayList: dueToday,
       dueTodayCount: dueToday.length,
+      dueTodayPending,
+      dueTodayPendingList: dueTodayPending,
       dueTodayPendingCount: dueTodayPending.length,
+      dueTodayCompleted,
+      dueTodayCompletedList: dueTodayCompleted,
       dueTodayCompletedCount: dueTodayCompleted.length,
       overdue,
+      overdueList: overdue,
       overdueCount: overdue.length,
       upcoming,
+      upcomingList: upcoming,
       upcomingCount: upcoming.length,
+      highPriority,
       highPriorityCount: highPriority.length,
+      mediumPriority,
       mediumPriorityCount: mediumPriority.length,
+      lowPriority,
       lowPriorityCount: lowPriority.length,
       completionRate,
       rawList: tasks

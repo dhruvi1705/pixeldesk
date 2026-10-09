@@ -191,16 +191,6 @@ export function TaskList({
               <span>+</span>
               <span>NEW TASK</span>
             </button>
-            {onLoadStarterTasks && (
-              <button
-                type="button"
-                onClick={onLoadStarterTasks}
-                className="pixel-button"
-                style={{ fontSize: "8px" }}
-              >
-                LOAD DEMO TASKS
-              </button>
-            )}
           </div>
         </div>
       );

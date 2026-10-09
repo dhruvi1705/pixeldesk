@@ -1,33 +1,72 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { getLocalDateString } from "../data/taskCategories";
+import { scopedStorage } from "../utils/storage";
+import { apiClient } from "../utils/apiClient";
 
-const STORAGE_KEY = "pixeldesk_tasks";
+const STORAGE_KEY = "tasks";
 
 export function useTasks() {
   const [tasks, setTasks] = useState(() => {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
+      const stored = scopedStorage.getItem(STORAGE_KEY);
       if (stored) {
-        const parsed = JSON.parse(stored);
+        const parsed = typeof stored === "string" ? JSON.parse(stored) : stored;
         if (Array.isArray(parsed)) {
           return parsed;
         }
       }
     } catch (err) {
-      console.warn("Failed to read tasks from localStorage:", err);
+      console.warn("Failed to read tasks from scopedStorage:", err);
     }
     return [];
   });
 
   const [activeFilter, setActiveFilter] = useState("ALL");
   const [searchQuery, setSearchQuery] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Persist to localStorage whenever tasks change
+  // Sync tasks from backend on mount
+  useEffect(() => {
+    let isMounted = true;
+    async function fetchTasks() {
+      setIsLoading(true);
+      try {
+        const remoteTasks = await apiClient.tasks.list();
+        if (isMounted && Array.isArray(remoteTasks)) {
+          // Normalize remote snake_case fields to camelCase for UI compatibility
+          const normalized = remoteTasks.map((t) => ({
+            id: t.id,
+            title: t.title,
+            description: t.description || "",
+            dueDate: t.due_date || "",
+            priority: t.priority || "Medium",
+            category: t.category || "Other",
+            completed: Boolean(t.completed),
+            createdAt: t.created_at,
+            updatedAt: t.updated_at,
+          }));
+          setTasks(normalized);
+          scopedStorage.setItem(STORAGE_KEY, normalized);
+        }
+      } catch (err) {
+        console.warn("Backend tasks sync unavailable; using local cache:", err.message);
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    }
+
+    fetchTasks();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // Persist to user-scoped storage whenever tasks change
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+      scopedStorage.setItem(STORAGE_KEY, tasks);
     } catch (err) {
-      console.error("Failed to save tasks to localStorage:", err);
+      console.error("Failed to save tasks to scopedStorage:", err);
     }
   }, [tasks]);
 
@@ -42,14 +81,15 @@ export function useTasks() {
     }
   };
 
-  const createTask = useCallback((taskData) => {
+  const createTask = useCallback(async (taskData) => {
     const trimmedTitle = (taskData.title || "").trim();
     if (!trimmedTitle) {
       return { success: false, error: "Task title is required." };
     }
 
+    const tempId = `task_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
     const newTask = {
-      id: `task_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+      id: tempId,
       title: trimmedTitle,
       description: (taskData.description || "").trim(),
       dueDate: taskData.dueDate || "",
@@ -60,12 +100,26 @@ export function useTasks() {
       updatedAt: new Date().toISOString()
     };
 
+    // Optimistic UI update
     setTasks((prev) => [newTask, ...prev]);
     emitTaskEvent("taskCreated", newTask);
+
+    // Backend sync
+    try {
+      const created = await apiClient.tasks.create(newTask);
+      if (created && created.id) {
+        setTasks((prev) =>
+          prev.map((t) => (t.id === tempId ? { ...t, id: created.id } : t))
+        );
+      }
+    } catch (err) {
+      console.warn("Task creation saved locally, backend sync failed:", err.message);
+    }
+
     return { success: true, task: newTask };
   }, []);
 
-  const updateTask = useCallback((id, updates) => {
+  const updateTask = useCallback(async (id, updates) => {
     const trimmedTitle = updates.title !== undefined ? updates.title.trim() : undefined;
     if (trimmedTitle !== undefined && !trimmedTitle) {
       return { success: false, error: "Task title cannot be empty." };
@@ -89,30 +143,46 @@ export function useTasks() {
 
     if (updatedTask) {
       emitTaskEvent("taskUpdated", updatedTask);
+      try {
+        await apiClient.tasks.update(id, updates);
+      } catch (err) {
+        console.warn("Task update saved locally, backend sync failed:", err.message);
+      }
       return { success: true, task: updatedTask };
     }
     return { success: false, error: "Task not found." };
   }, []);
 
-  const toggleTask = useCallback((id) => {
+  const toggleTask = useCallback(async (id) => {
+    let nextCompleted = false;
+    let updatedTask = null;
+
     setTasks((prev) =>
       prev.map((t) => {
         if (t.id === id) {
-          const nextCompleted = !t.completed;
-          const updated = {
+          nextCompleted = !t.completed;
+          updatedTask = {
             ...t,
             completed: nextCompleted,
             updatedAt: new Date().toISOString()
           };
-          emitTaskEvent(nextCompleted ? "taskCompleted" : "taskUncompleted", updated);
-          return updated;
+          return updatedTask;
         }
         return t;
       })
     );
+
+    if (updatedTask) {
+      emitTaskEvent(nextCompleted ? "taskCompleted" : "taskUncompleted", updatedTask);
+      try {
+        await apiClient.tasks.update(id, { completed: nextCompleted });
+      } catch (err) {
+        console.warn("Task toggle saved locally, backend sync failed:", err.message);
+      }
+    }
   }, []);
 
-  const deleteTask = useCallback((id) => {
+  const deleteTask = useCallback(async (id) => {
     let deletedTask = null;
     setTasks((prev) => {
       deletedTask = prev.find((t) => t.id === id);
@@ -120,52 +190,12 @@ export function useTasks() {
     });
     if (deletedTask) {
       emitTaskEvent("taskDeleted", deletedTask);
-    }
-  }, []);
-
-  const loadStarterTasks = useCallback(() => {
-    const today = getLocalDateString();
-    const tomorrowDate = new Date();
-    tomorrowDate.setDate(tomorrowDate.getDate() + 1);
-    const tomorrow = getLocalDateString(tomorrowDate);
-
-    const starterData = [
-      {
-        id: `task_${Date.now()}_1`,
-        title: "Finish project documentation",
-        description: "Review system architecture diagrams and setup instructions.",
-        dueDate: today,
-        priority: "High",
-        category: "Study",
-        completed: false,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      },
-      {
-        id: `task_${Date.now()}_2`,
-        title: "Submit assignment",
-        description: "Submit PDF report to student workspace portal.",
-        dueDate: today,
-        priority: "Medium",
-        category: "Work",
-        completed: true,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      },
-      {
-        id: `task_${Date.now()}_3`,
-        title: "Prepare presentation",
-        description: "Draft 8-bit slides for the team demo showcase.",
-        dueDate: tomorrow,
-        priority: "Low",
-        category: "Personal",
-        completed: false,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+      try {
+        await apiClient.tasks.delete(id);
+      } catch (err) {
+        console.warn("Task deletion performed locally, backend sync failed:", err.message);
       }
-    ];
-
-    setTasks(starterData);
+    }
   }, []);
 
   // Filter and search logic
@@ -237,10 +267,10 @@ export function useTasks() {
     setActiveFilter,
     searchQuery,
     setSearchQuery,
+    isLoading,
     createTask,
     updateTask,
     toggleTask,
-    deleteTask,
-    loadStarterTasks
+    deleteTask
   };
 }

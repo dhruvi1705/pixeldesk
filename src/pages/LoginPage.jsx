@@ -1,19 +1,21 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { AuthWindow } from "../components/AuthWindow";
 import { PixelInput } from "../components/PixelInput";
+import { authService } from "../utils/authService";
 
 export function LoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Form State
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState({});
-  const [infoMessage, setInfoMessage] = useState(null);
+  const [serverError, setServerError] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
   const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
 
-  // Frontend validation only
   const validateForm = () => {
     const newErrors = {};
 
@@ -31,13 +33,25 @@ export function LoginPage() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleLoginSubmit = (e) => {
+  const handleLoginSubmit = async (e) => {
     e.preventDefault();
-    setInfoMessage(null);
+    setServerError(null);
 
-    if (validateForm()) {
-      // Per instructions: Do NOT pretend authentication works, do NOT store credentials
-      setInfoMessage("Authentication will be available when the PixelDesk backend is connected.");
+    if (!validateForm()) return;
+
+    setIsLoading(true);
+    try {
+      const result = await authService.login({ email, password });
+      if (result.success) {
+        const from = location.state?.from?.pathname || location.state?.from || "/desktop";
+        navigate(from, { replace: true });
+      } else {
+        setServerError(result.error);
+      }
+    } catch (err) {
+      setServerError("An unexpected error occurred. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -65,14 +79,14 @@ export function LoginPage() {
         </p>
       </div>
 
-      {/* Prototype Information Notice Banner */}
-      {infoMessage && (
+      {/* Server Error / Notice Banner */}
+      {serverError && (
         <div
-          role="status"
+          role="alert"
           aria-live="polite"
           style={{
-            backgroundColor: "var(--color-yellow-light)",
-            border: "2px solid var(--color-yellow-dark)",
+            backgroundColor: "var(--color-coral-light, #ffe8e4)",
+            border: "2px solid var(--color-coral, #e76f51)",
             padding: "10px 12px",
             marginBottom: "14px",
             display: "flex",
@@ -81,9 +95,9 @@ export function LoginPage() {
             boxShadow: "1px 1px 0 var(--shadow)"
           }}
         >
-          <span style={{ fontSize: "16px" }}>ℹ️</span>
+          <span style={{ fontSize: "16px" }}>⚠️</span>
           <div style={{ fontSize: "12px", color: "var(--color-navy)", lineHeight: 1.4 }}>
-            <strong>Prototype Notice:</strong> {infoMessage}
+            <strong>Authentication Notice:</strong> {serverError}
           </div>
         </div>
       )}
@@ -98,11 +112,13 @@ export function LoginPage() {
           onChange={(e) => {
             setEmail(e.target.value);
             if (errors.email) setErrors((prev) => ({ ...prev, email: null }));
+            if (serverError) setServerError(null);
           }}
           placeholder="student@pixeldesk.dev"
           error={errors.email}
           required
           autoComplete="email"
+          disabled={isLoading}
         />
 
         <PixelInput
@@ -113,11 +129,13 @@ export function LoginPage() {
           onChange={(e) => {
             setPassword(e.target.value);
             if (errors.password) setErrors((prev) => ({ ...prev, password: null }));
+            if (serverError) setServerError(null);
           }}
           placeholder="••••••••"
           error={errors.password}
           required
           autoComplete="current-password"
+          disabled={isLoading}
         />
 
         {/* Forgot Password Link */}
@@ -144,37 +162,13 @@ export function LoginPage() {
         <button
           type="submit"
           className="pixel-button pixel-button-primary"
+          disabled={isLoading}
           style={{ width: "100%", padding: "10px", marginTop: "4px" }}
         >
-          [ LOGIN ]
+          {isLoading ? "[ LOGGING IN... ]" : "[ LOGIN ]"}
         </button>
       </form>
 
-      {/* Divider */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          margin: "16px 0",
-          color: "var(--text-secondary)",
-          fontFamily: "var(--font-retro)",
-          fontSize: "14px"
-        }}
-      >
-        <div style={{ flex: 1, height: "1px", backgroundColor: "var(--border)" }} />
-        <span style={{ padding: "0 10px" }}>or</span>
-        <div style={{ flex: 1, height: "1px", backgroundColor: "var(--border)" }} />
-      </div>
-
-      {/* Continue as Demo Action Button */}
-      <button
-        type="button"
-        onClick={() => navigate("/desktop")}
-        className="pixel-button pixel-button-teal"
-        style={{ width: "100%", padding: "9px" }}
-      >
-        [ CONTINUE AS DEMO ]
-      </button>
 
       {/* Footer Navigation Link */}
       <div
@@ -247,7 +241,7 @@ export function LoginPage() {
                 marginBottom: "16px"
               }}
             >
-              Password recovery will be available when authentication is connected.
+              For security, password reset tokens are handled via support or admin console in this release.
             </p>
             <div style={{ display: "flex", justifyContent: "flex-end" }}>
               <button

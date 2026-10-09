@@ -106,17 +106,8 @@ export function FinanceWindow({ onClose: _onClose }) {
           </p>
         </div>
 
-        {/* Demo reset & Add button */}
+        {/* Action Header */}
         <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-          <button
-            type="button"
-            onClick={loadStarterTransactions}
-            className="pixel-button pixel-button-sm"
-            style={{ fontFamily: "var(--font-pixel)", fontSize: "7.5px", padding: "3px 6px" }}
-            title="Reset to starter finance demo transactions"
-          >
-            ↺ DEMO
-          </button>
           <button
             type="button"
             onClick={handleOpenCreate}

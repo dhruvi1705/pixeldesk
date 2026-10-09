@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { formatTaskDueDate, TASK_CATEGORIES, TASK_PRIORITIES } from "../../data/taskCategories";
+import { formatRelativeTime } from "../../data/noteCategories";
 
 export function TaskItem({
   task,
@@ -10,11 +11,16 @@ export function TaskItem({
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   const dueInfo = formatTaskDueDate(task.dueDate);
-  const categoryInfo = TASK_CATEGORIES.find((c) => c.id === task.category) || TASK_CATEGORIES[3];
+  const categoryInfo = TASK_CATEGORIES.find((c) => c.id === task.category) || (task.category ? { id: task.category, label: task.category, icon: "📌" } : null);
   const priorityInfo = TASK_PRIORITIES.find((p) => p.id === task.priority) || TASK_PRIORITIES[1];
+  const relativeTime = formatRelativeTime(task.updatedAt || task.createdAt);
 
   const isCompleted = task.completed;
   const isOverdue = !isCompleted && dueInfo?.isOverdue;
+
+  // Custom tags support if available
+  const customTags = Array.isArray(task.tags) ? task.tags : [];
+  const hasTags = Boolean(categoryInfo || dueInfo || customTags.length > 0);
 
   return (
     <article
@@ -34,7 +40,9 @@ export function TaskItem({
         boxShadow: isCompleted ? "none" : "2px 2px 0 var(--shadow)",
         borderRadius: "0px",
         transition: "background-color 0.15s ease, opacity 0.15s ease, border-color 0.15s ease",
-        opacity: isCompleted ? 0.75 : 1
+        opacity: isCompleted ? 0.75 : 1,
+        boxSizing: "border-box",
+        width: "100%"
       }}
     >
       {/* Pixel Checkbox */}
@@ -44,6 +52,7 @@ export function TaskItem({
         aria-checked={isCompleted}
         aria-label={`Mark "${task.title}" as ${isCompleted ? "incomplete" : "complete"}`}
         onClick={() => onToggle(task.id)}
+        className="task-checkbox-btn"
         style={{
           width: "20px",
           height: "20px",
@@ -62,13 +71,20 @@ export function TaskItem({
           fontSize: "11px",
           lineHeight: 1
         }}
-        className="task-checkbox-btn"
       >
         {isCompleted ? "✓" : ""}
       </button>
 
       {/* Task Content Column */}
-      <div style={{ flex: 1, minWidth: 0 }}>
+      <div
+        style={{
+          flex: 1,
+          minWidth: 0,
+          display: "flex",
+          flexDirection: "column",
+          gap: "4px"
+        }}
+      >
         {/* Title Row */}
         <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: "8px" }}>
           <h4
@@ -79,7 +95,8 @@ export function TaskItem({
               color: isCompleted ? "var(--text-secondary)" : "var(--text-primary)",
               textDecoration: isCompleted ? "line-through" : "none",
               margin: 0,
-              wordBreak: "break-word"
+              wordBreak: "break-word",
+              overflowWrap: "anywhere"
             }}
           >
             {task.title}
@@ -104,20 +121,106 @@ export function TaskItem({
         </div>
 
         {/* Optional Description */}
-        {task.description && (
+        {task.description ? (
           <p
             style={{
               fontFamily: "var(--font-body)",
               fontSize: "12px",
               color: isCompleted ? "var(--text-muted)" : "var(--text-secondary)",
-              margin: "3px 0 6px 0",
+              margin: "2px 0 4px 0",
               wordBreak: "break-word",
+              overflowWrap: "anywhere",
               lineHeight: 1.35
             }}
           >
             {task.description}
           </p>
-        )}
+        ) : null}
+
+        {/* Reserved Tag Row Area (Consistent spacing with or without tags) */}
+        <div
+          className="task-tags-row"
+          style={{
+            minHeight: "22px",
+            display: "flex",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: "6px",
+            boxSizing: "border-box"
+          }}
+        >
+          {hasTags ? (
+            <>
+              {/* Category Tag */}
+              {categoryInfo && (
+                <span
+                  style={{
+                    fontFamily: "var(--font-retro)",
+                    fontSize: "14px",
+                    backgroundColor: "var(--surface-dark)",
+                    border: "1px solid var(--border-subtle)",
+                    padding: "0 6px",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "4px",
+                    color: "var(--text-primary)",
+                    lineHeight: 1.3
+                  }}
+                >
+                  <span>{categoryInfo.icon}</span>
+                  <span>{categoryInfo.label}</span>
+                </span>
+              )}
+
+              {/* Due Date Tag */}
+              {dueInfo && (
+                <span
+                  style={{
+                    fontFamily: "var(--font-retro)",
+                    fontSize: "14px",
+                    padding: "0 6px",
+                    border: isOverdue ? "1px solid var(--color-coral)" : "1px solid var(--border-subtle)",
+                    backgroundColor: isOverdue
+                      ? "var(--color-coral-light)"
+                      : dueInfo.isToday
+                      ? "var(--color-yellow-light)"
+                      : "var(--surface-dark)",
+                    color: isOverdue ? "var(--color-coral)" : "var(--text-primary)",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "4px",
+                    lineHeight: 1.3
+                  }}
+                >
+                  <span>{isOverdue ? "⚠️ Overdue:" : dueInfo.isToday ? "⏰" : "📅"}</span>
+                  <span>{dueInfo.text}</span>
+                </span>
+              )}
+
+              {/* Custom tags */}
+              {customTags.map((tag, idx) => (
+                <span
+                  key={idx}
+                  style={{
+                    fontFamily: "var(--font-retro)",
+                    fontSize: "14px",
+                    padding: "0 6px",
+                    border: "1px solid var(--border-subtle)",
+                    backgroundColor: "var(--surface-dark)",
+                    color: "var(--text-secondary)",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "3px",
+                    lineHeight: 1.3
+                  }}
+                >
+                  <span>#</span>
+                  <span>{tag}</span>
+                </span>
+              ))}
+            </>
+          ) : null}
+        </div>
 
         {/* Meta details & action row */}
         <div
@@ -126,57 +229,33 @@ export function TaskItem({
             alignItems: "center",
             justifyContent: "space-between",
             flexWrap: "wrap",
-            gap: "8px",
-            marginTop: "6px"
+            gap: "6px",
+            marginTop: "2px",
+            paddingTop: "4px",
+            borderTop: "1px dashed var(--border-subtle)"
           }}
         >
-          {/* Category & Due Date tags */}
-          <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
-            {/* Category */}
-            <span
-              style={{
-                fontFamily: "var(--font-retro)",
-                fontSize: "14px",
-                backgroundColor: "var(--surface-dark)",
-                border: "1px solid var(--border-subtle)",
-                padding: "0 6px",
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "4px",
-                color: "var(--text-primary)"
-              }}
-            >
-              <span>{categoryInfo.icon}</span>
-              <span>{categoryInfo.label}</span>
-            </span>
-
-            {/* Due Date */}
-            {dueInfo && (
+          {/* Timestamp on left */}
+          <div style={{ display: "flex", alignItems: "center", gap: "4px", minWidth: 0 }}>
+            {relativeTime ? (
               <span
                 style={{
                   fontFamily: "var(--font-retro)",
-                  fontSize: "14px",
-                  padding: "0 6px",
-                  border: isOverdue ? "1px solid var(--color-coral)" : "1px solid var(--border-subtle)",
-                  backgroundColor: isOverdue
-                    ? "var(--color-coral-light)"
-                    : dueInfo.isToday
-                    ? "var(--color-yellow-light)"
-                    : "var(--surface-dark)",
-                  color: isOverdue ? "var(--color-coral)" : "var(--text-primary)",
+                  fontSize: "13px",
+                  color: "var(--text-muted)",
                   display: "inline-flex",
                   alignItems: "center",
                   gap: "4px"
                 }}
               >
-                <span>{isOverdue ? "⚠️ Overdue:" : dueInfo.isToday ? "⏰" : "📅"}</span>
-                <span>{dueInfo.text}</span>
+                <span>🕒</span>
+                <span>{relativeTime}</span>
               </span>
-            )}
+            ) : null}
           </div>
 
           {/* Action Buttons: Edit & Delete */}
-          <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "4px", flexShrink: 0, marginLeft: "auto" }}>
             {confirmDelete ? (
               <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                 <span

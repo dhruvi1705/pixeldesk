@@ -1,66 +1,70 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { scopedStorage } from "../utils/storage";
+import { apiClient } from "../utils/apiClient";
 
-const STORAGE_KEY = "pixeldesk_notes";
-
-const INITIAL_STARTER_NOTES = [
-  {
-    id: "note_daa_algorithms",
-    title: "DAA Important Topics",
-    content: "Divide and conquer algorithms:\n- Merge sort & Quick sort recurrence relations\n- Master Theorem cases: T(n) = aT(n/b) + f(n)\n- Dynamic Programming: 0/1 Knapsack & Matrix Chain Multiplication\n- Greedy strategy vs Dynamic programming trade-offs",
-    tags: ["Study", "Ideas"],
-    accent: "lavender",
-    pinned: true,
-    createdAt: new Date(Date.now() - 3600000 * 3).toISOString(),
-    updatedAt: new Date(Date.now() - 3600000 * 2).toISOString()
-  },
-  {
-    id: "note_cloud_architecture",
-    title: "Cloud Architecture Notes",
-    content: "Core Virtualization and Microservices:\n- Container isolation vs Hypervisor VM\n- Horizontal scaling with load balancer health checks\n- S3 storage buckets with lifecycle policies\n- Stateless API service design with JWT sessions",
-    tags: ["Work", "Project"],
-    accent: "teal",
-    pinned: false,
-    createdAt: new Date(Date.now() - 86400000).toISOString(),
-    updatedAt: new Date(Date.now() - 86400000).toISOString()
-  },
-  {
-    id: "note_pixeldesk_ideas",
-    title: "PixelDesk Feature Ideas",
-    content: "Retro desktop brainstorm:\n- Monospace code block highlighter\n- Export notes as .txt or .md files\n- Sticky notes pinboard on the desktop wallpaper\n- Retro font switcher in settings",
-    tags: ["Ideas"],
-    accent: "yellow",
-    pinned: false,
-    createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
-    updatedAt: new Date(Date.now() - 86400000 * 2).toISOString()
-  }
-];
+const STORAGE_KEY = "notes";
 
 export function useNotes() {
   const [notes, setNotes] = useState(() => {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
+      const stored = scopedStorage.getItem(STORAGE_KEY);
       if (stored) {
-        const parsed = JSON.parse(stored);
+        const parsed = typeof stored === "string" ? JSON.parse(stored) : stored;
         if (Array.isArray(parsed)) {
           return parsed;
         }
       }
     } catch (err) {
-      console.warn("Failed to read notes from localStorage:", err);
+      console.warn("Failed to read notes from scopedStorage:", err);
     }
-    return INITIAL_STARTER_NOTES;
+    return [];
   });
 
   const [activeFilter, setActiveFilter] = useState("ALL");
   const [selectedTag, setSelectedTag] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Persist immediately on changes
+  // Sync notes from backend on mount
+  useEffect(() => {
+    let isMounted = true;
+    async function fetchNotes() {
+      setIsLoading(true);
+      try {
+        const remoteNotes = await apiClient.notes.list();
+        if (isMounted && Array.isArray(remoteNotes)) {
+          const normalized = remoteNotes.map((n) => ({
+            id: n.id,
+            title: n.title,
+            content: n.content,
+            tags: n.tags || [],
+            accent: n.accent || "lavender",
+            pinned: Boolean(n.pinned),
+            createdAt: n.created_at,
+            updatedAt: n.updated_at,
+          }));
+          setNotes(normalized);
+          scopedStorage.setItem(STORAGE_KEY, normalized);
+        }
+      } catch (err) {
+        console.warn("Backend notes sync unavailable; using local cache:", err.message);
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    }
+
+    fetchNotes();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // Persist immediately on changes to user-scoped storage
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
+      scopedStorage.setItem(STORAGE_KEY, notes);
     } catch (err) {
-      console.error("Failed to save notes to localStorage:", err);
+      console.error("Failed to save notes to scopedStorage:", err);
     }
   }, [notes]);
 
@@ -75,7 +79,7 @@ export function useNotes() {
     }
   };
 
-  const createNote = useCallback((noteData) => {
+  const createNote = useCallback(async (noteData) => {
     const trimmedTitle = (noteData.title || "").trim();
     const trimmedContent = (noteData.content || "").trim();
 
@@ -86,8 +90,9 @@ export function useNotes() {
       return { success: false, error: "Note content is required." };
     }
 
+    const tempId = `note_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
     const newNote = {
-      id: `note_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+      id: tempId,
       title: trimmedTitle.slice(0, 100),
       content: trimmedContent.slice(0, 5000),
       tags: Array.isArray(noteData.tags) ? noteData.tags.map(t => t.trim()).filter(Boolean) : [],
@@ -99,10 +104,22 @@ export function useNotes() {
 
     setNotes((prev) => [newNote, ...prev]);
     emitNoteEvent("noteCreated", newNote);
+
+    try {
+      const created = await apiClient.notes.create(newNote);
+      if (created && created.id) {
+        setNotes((prev) =>
+          prev.map((n) => (n.id === tempId ? { ...n, id: created.id } : n))
+        );
+      }
+    } catch (err) {
+      console.warn("Note creation saved locally, backend sync failed:", err.message);
+    }
+
     return { success: true, note: newNote };
   }, []);
 
-  const updateNote = useCallback((id, updates) => {
+  const updateNote = useCallback(async (id, updates) => {
     const trimmedTitle = updates.title !== undefined ? updates.title.trim() : undefined;
     const trimmedContent = updates.content !== undefined ? updates.content.trim() : undefined;
 
@@ -125,7 +142,7 @@ export function useNotes() {
             ...(updates.tags !== undefined
               ? { tags: Array.isArray(updates.tags) ? updates.tags.map(t => t.trim()).filter(Boolean) : [] }
               : {}),
-            createdAt: n.createdAt, // Preserve original creation timestamp
+            createdAt: n.createdAt,
             updatedAt: new Date().toISOString()
           };
           return updatedNote;
@@ -136,30 +153,46 @@ export function useNotes() {
 
     if (updatedNote) {
       emitNoteEvent("noteUpdated", updatedNote);
+      try {
+        await apiClient.notes.update(id, updates);
+      } catch (err) {
+        console.warn("Note update saved locally, backend sync failed:", err.message);
+      }
       return { success: true, note: updatedNote };
     }
     return { success: false, error: "Note not found." };
   }, []);
 
-  const togglePin = useCallback((id) => {
+  const togglePin = useCallback(async (id) => {
+    let nextPinned = false;
+    let updatedNote = null;
+
     setNotes((prev) =>
       prev.map((n) => {
         if (n.id === id) {
-          const nextPinned = !n.pinned;
-          const updated = {
+          nextPinned = !n.pinned;
+          updatedNote = {
             ...n,
             pinned: nextPinned,
             updatedAt: new Date().toISOString()
           };
-          emitNoteEvent("notePinnedToggle", updated);
-          return updated;
+          return updatedNote;
         }
         return n;
       })
     );
+
+    if (updatedNote) {
+      emitNoteEvent("notePinnedToggle", updatedNote);
+      try {
+        await apiClient.notes.update(id, { pinned: nextPinned });
+      } catch (err) {
+        console.warn("Note pin toggle saved locally, backend sync failed:", err.message);
+      }
+    }
   }, []);
 
-  const deleteNote = useCallback((id) => {
+  const deleteNote = useCallback(async (id) => {
     let deletedNote = null;
     setNotes((prev) => {
       deletedNote = prev.find((n) => n.id === id);
@@ -167,11 +200,12 @@ export function useNotes() {
     });
     if (deletedNote) {
       emitNoteEvent("noteDeleted", deletedNote);
+      try {
+        await apiClient.notes.delete(id);
+      } catch (err) {
+        console.warn("Note deletion performed locally, backend sync failed:", err.message);
+      }
     }
-  }, []);
-
-  const loadStarterNotes = useCallback(() => {
-    setNotes(INITIAL_STARTER_NOTES);
   }, []);
 
   // Filter and search logic with strict pinned precedence
@@ -241,10 +275,10 @@ export function useNotes() {
     setSelectedTag,
     searchQuery,
     setSearchQuery,
+    isLoading,
     createNote,
     updateNote,
     deleteNote,
-    togglePin,
-    loadStarterNotes
+    togglePin
   };
 }

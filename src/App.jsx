@@ -4,22 +4,30 @@ import { LaunchPage } from "./pages/LaunchPage";
 import { LoginPage } from "./pages/LoginPage";
 import { SignupPage } from "./pages/SignupPage";
 import { DesktopWorkspace } from "./components/DesktopWorkspace";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* 1. Launch / Boot Screen */}
+        {/* 1. Public Launch / Boot Screen */}
         <Route path="/" element={<LaunchPage />} />
 
-        {/* 2. Login Page */}
+        {/* 2. Public Login Page */}
         <Route path="/login" element={<LoginPage />} />
 
-        {/* 3. Sign Up Page */}
+        {/* 3. Public Sign Up Page */}
         <Route path="/signup" element={<SignupPage />} />
 
-        {/* 4. Existing PixelDesk Desktop Workspace */}
-        <Route path="/desktop" element={<DesktopWorkspace />} />
+        {/* 4. Private Protected Desktop Workspace */}
+        <Route
+          path="/desktop"
+          element={
+            <ProtectedRoute>
+              <DesktopWorkspace />
+            </ProtectedRoute>
+          }
+        />
 
         {/* Fallback to Launch Screen */}
         <Route path="*" element={<Navigate to="/" replace />} />

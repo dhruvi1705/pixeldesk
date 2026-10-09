@@ -125,7 +125,7 @@ export function WindowManager({
             />
           );
         } else if (win.id === "help") {
-          defaultWidth = 440;
+          defaultWidth = 520;
           content = <HelpWindow />;
         } else {
           // Placeholder apps (tasks, notes, calendar, focus, finance, analytics, ai)

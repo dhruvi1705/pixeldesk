@@ -667,9 +667,23 @@
 /* ========================================================
    TASK MANAGER STYLES
    ======================================================== */
+.task-item-card {
+  box-sizing: border-box;
+  width: 100%;
+}
+
 .task-item-card:hover:not(.task-completed) {
   border-color: var(--color-teal);
   box-shadow: 2px 2px 0 var(--shadow);
+}
+
+.task-tags-row {
+  min-height: 22px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  box-sizing: border-box;
 }
 
 .task-checkbox-btn:hover {
@@ -777,6 +791,19 @@
 }
 
 /* ========================================================
+   ABOUT APPLICATION STYLES
+   ======================================================== */
+.about-app-card {
+  transition: transform var(--transition-speed) ease, border-color var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
+}
+
+.about-app-card:hover {
+  transform: translateY(-1px);
+  border-color: var(--color-teal) !important;
+  box-shadow: 2.5px 2.5px 0 var(--shadow) !important;
+}
+
+/* ========================================================
    PIXEL COMPANION STYLES & ANIMATIONS
    ======================================================== */
 .desktop-companion-station {
@@ -788,11 +815,39 @@
 }
 
 .pixel-companion-card {
+  box-sizing: border-box;
+  max-width: 100%;
   transition: border-color var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
 }
 
 .pixel-companion-card:hover {
   box-shadow: 4px 4px 0 var(--shadow);
+}
+
+.pixel-companion-header {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.pixel-companion-title {
+  min-width: 0;
+}
+
+.pixel-companion-edit-btn {
+  transition: background-color var(--transition-speed) ease, color var(--transition-speed) ease, border-color var(--transition-speed) ease;
+}
+
+.pixel-companion-edit-btn:hover {
+  background-color: var(--surface-dark) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border) !important;
+}
+
+.companion-behavior-stage {
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 /* Companion Idle Animation */
@@ -982,6 +1037,7 @@
     top: auto;
     bottom: 68px;
     right: 12px;
+    max-width: calc(100vw - 24px);
   }
   .pixel-companion-card {
     width: 116px !important;
@@ -993,10 +1049,18 @@
   .desktop-companion-station {
     bottom: 54px;
     right: 6px;
+    max-width: calc(100vw - 12px);
   }
   .pixel-companion-card {
     width: 106px !important;
     padding: 4px !important;
+  }
+  .pixel-companion-title {
+    font-size: 6.5px !important;
+  }
+  .pixel-companion-edit-btn {
+    font-size: 6px !important;
+    padding: 1px 3px !important;
   }
 }
 

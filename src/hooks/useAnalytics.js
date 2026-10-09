@@ -1,16 +1,17 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { scopedStorage } from "../utils/storage";
 
-const TASKS_KEY = "pixeldesk_tasks";
-const FOCUS_KEY = "pixeldesk_focus_sessions";
-const FINANCE_KEY = "pixeldesk_transactions";
-const CALENDAR_KEY = "pixeldesk_events";
+const TASKS_KEY = "tasks";
+const FOCUS_KEY = "focus_sessions";
+const FINANCE_KEY = "transactions";
+const CALENDAR_KEY = "events";
 
-// Safely parse localStorage JSON
+// Safely parse scopedStorage JSON
 function safeParse(key) {
   try {
-    const raw = localStorage.getItem(key);
+    const raw = scopedStorage.getItem(key);
     if (!raw) return [];
-    const parsed = JSON.parse(raw);
+    const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
     return Array.isArray(parsed) ? parsed : [];
   } catch (err) {
     console.warn(`Failed to parse ${key}:`, err);

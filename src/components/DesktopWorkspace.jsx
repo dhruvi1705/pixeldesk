@@ -4,6 +4,11 @@ import { Desktop } from "./Desktop";
 import { Dock } from "./Dock";
 import { WindowManager } from "./WindowManager";
 import { useCompanion } from "../hooks/useCompanion";
+import { scopedStorage } from "../utils/storage";
+
+const WINDOWS_KEY = "workspace_open_windows";
+const ACTIVE_WINDOW_KEY = "workspace_active_window";
+const Z_INDEX_KEY = "workspace_z_index";
 
 export function DesktopWorkspace() {
   // 1. Persistent User Settings
@@ -62,12 +67,42 @@ export function DesktopWorkspace() {
   // Pixel Companion State
   const companion = useCompanion();
 
-  // 2. Window Management State
-  const [zIndexCounter, setZIndexCounter] = useState(20);
-  const [activeWindowId, setActiveWindowId] = useState("welcome");
+  // 2. Window Management State (Restored from user-scoped storage on refresh)
+  const [zIndexCounter, setZIndexCounter] = useState(() => {
+    try {
+      const stored = scopedStorage.getItem(Z_INDEX_KEY);
+      if (stored) {
+        const parsed = parseInt(stored, 10);
+        if (!isNaN(parsed) && parsed >= 20) return parsed;
+      }
+    } catch {}
+    return 20;
+  });
 
-  // Initial state: Welcome window is open on load
+  const [activeWindowId, setActiveWindowId] = useState(() => {
+    try {
+      const stored = scopedStorage.getItem(ACTIVE_WINDOW_KEY);
+      if (stored) {
+        const parsed = typeof stored === "string" ? JSON.parse(stored) : stored;
+        if (parsed) return parsed;
+      }
+    } catch {}
+    return "welcome";
+  });
+
   const [openWindows, setOpenWindows] = useState(() => {
+    try {
+      const stored = scopedStorage.getItem(WINDOWS_KEY);
+      if (stored) {
+        const parsed = typeof stored === "string" ? JSON.parse(stored) : stored;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      }
+    } catch (err) {
+      console.warn("Failed to load open windows from scoped storage:", err);
+    }
+
     const isMobile = typeof window !== "undefined" && window.innerWidth <= 640;
     const initialPos = isMobile
       ? { x: 12, y: 52 }
@@ -85,6 +120,31 @@ export function DesktopWorkspace() {
       }
     ];
   });
+
+  // Save window management state to scopedStorage across refreshes
+  useEffect(() => {
+    try {
+      scopedStorage.setItem(WINDOWS_KEY, openWindows);
+    } catch (err) {
+      console.error("Failed to save open windows:", err);
+    }
+  }, [openWindows]);
+
+  useEffect(() => {
+    try {
+      scopedStorage.setItem(ACTIVE_WINDOW_KEY, activeWindowId);
+    } catch (err) {
+      console.error("Failed to save active window:", err);
+    }
+  }, [activeWindowId]);
+
+  useEffect(() => {
+    try {
+      scopedStorage.setItem(Z_INDEX_KEY, zIndexCounter);
+    } catch (err) {
+      console.error("Failed to save z-index:", err);
+    }
+  }, [zIndexCounter]);
 
   // Focus a window and bring it to top
   const handleFocusWindow = (id) => {

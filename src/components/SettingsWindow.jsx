@@ -1,4 +1,5 @@
 import React from "react";
+import { authService } from "../utils/authService";
 
 export function SettingsWindow({
   theme,
@@ -301,6 +302,69 @@ export function SettingsWindow({
               className={`pixel-toggle-btn ${reducedMotion ? "active" : ""}`}
             >
               ON
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* SECTION 5: ACCOUNT & SESSION */}
+      <section
+        style={{
+          border: "2px solid var(--border)",
+          padding: "12px 14px",
+          backgroundColor: "var(--surface-dark)",
+          boxShadow: "1px 1px 0 var(--shadow)",
+          borderRadius: "0px"
+        }}
+      >
+        <h3
+          style={{
+            fontFamily: "var(--font-pixel)",
+            fontSize: "10px",
+            color: "var(--text-primary)",
+            marginBottom: "10px",
+            display: "flex",
+            alignItems: "center",
+            gap: "6px"
+          }}
+        >
+          <span>👤</span> Account & Session
+        </h3>
+
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "12px"
+          }}
+        >
+          <div>
+            <div style={{ fontSize: "12.5px", fontWeight: 600, color: "var(--text-primary)" }}>
+              Private Workspace
+            </div>
+            <div style={{ fontSize: "11px", color: "var(--text-secondary)" }}>
+              {(() => {
+                const u = authService.getStoredUser();
+                if (u) {
+                  return `Authenticated as ${u.email || u.full_name || "User"}`;
+                }
+                return "Active Session";
+              })()}
+            </div>
+          </div>
+
+          <div>
+            <button
+              type="button"
+              onClick={() => {
+                authService.logout();
+                window.location.href = "/login";
+              }}
+              className="pixel-button pixel-button-coral pixel-button-sm"
+              style={{ fontSize: "9px" }}
+            >
+              [ LOG OUT ]
             </button>
           </div>
         </div>

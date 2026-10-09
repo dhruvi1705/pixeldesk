@@ -36,27 +36,41 @@ export function PixelCompanion({
         alignItems: "center",
         gap: "6px",
         width: "128px",
+        maxWidth: "100%",
+        boxSizing: "border-box",
         position: "relative",
         userSelect: "none"
       }}
     >
       {/* Companion Card Header: COMPANION on left, EDIT on right */}
       <div
+        className="pixel-companion-header"
         style={{
           width: "100%",
+          maxWidth: "100%",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
+          gap: "4px",
           borderBottom: "1.5px solid var(--border-subtle)",
-          paddingBottom: "5px"
+          paddingBottom: "5px",
+          boxSizing: "border-box",
+          minWidth: 0
         }}
       >
         <span
+          className="pixel-companion-title"
+          title="COMPANION"
           style={{
             fontFamily: "var(--font-pixel)",
             fontSize: "7.5px",
             color: "var(--text-primary)",
-            letterSpacing: "0.5px"
+            letterSpacing: "0.2px",
+            minWidth: 0,
+            flex: 1,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap"
           }}
         >
           COMPANION
@@ -68,6 +82,7 @@ export function PixelCompanion({
             onClick={onOpenStudio}
             title="Customize avatar in Avatar Studio"
             aria-label="Edit avatar in Studio"
+            className="pixel-companion-edit-btn"
             style={{
               background: "transparent",
               border: "1px solid var(--border-subtle)",
@@ -76,9 +91,13 @@ export function PixelCompanion({
               fontSize: "6.5px",
               padding: "1px 4px",
               cursor: "pointer",
-              display: "flex",
+              display: "inline-flex",
               alignItems: "center",
-              lineHeight: 1.2
+              justifyContent: "center",
+              flexShrink: 0,
+              whiteSpace: "nowrap",
+              lineHeight: 1.2,
+              boxSizing: "border-box"
             }}
           >
             EDIT

@@ -9,18 +9,20 @@ import {
   COMPANION_IDLE_THRESHOLD,
   COMPANION_SLEEP_THRESHOLD
 } from "../utils/companionEvents";
+import { scopedStorage } from "../utils/storage";
 
-const AVATAR_KEY = "pixeldesk_avatar";
-const FOCUS_TIMER_KEY = "pixeldesk_focus_timer_state";
-const TASKS_KEY = "pixeldesk_tasks";
+const AVATAR_KEY = "avatar";
+const FOCUS_TIMER_KEY = "focus_timer_state";
+const TASKS_KEY = "tasks";
 
 export function useCompanion() {
   // 1. Persistent Avatar Configuration (synced with Avatar Studio)
   const [avatarConfig, setAvatarConfig] = useState(() => {
     try {
-      const stored = localStorage.getItem(AVATAR_KEY);
+      const stored = scopedStorage.getItem(AVATAR_KEY);
       if (stored) {
-        return sanitizeAvatarConfig(JSON.parse(stored));
+        const parsed = typeof stored === "string" ? JSON.parse(stored) : stored;
+        return sanitizeAvatarConfig(parsed);
       }
     } catch (err) {
       console.warn("Failed to load avatar in companion:", err);
@@ -36,9 +38,10 @@ export function useCompanion() {
         setAvatarConfig(sanitizeAvatarConfig(newConfig));
       } else {
         try {
-          const stored = localStorage.getItem(AVATAR_KEY);
+          const stored = scopedStorage.getItem(AVATAR_KEY);
           if (stored) {
-            setAvatarConfig(sanitizeAvatarConfig(JSON.parse(stored)));
+            const parsed = typeof stored === "string" ? JSON.parse(stored) : stored;
+            setAvatarConfig(sanitizeAvatarConfig(parsed));
           }
         } catch {}
       }
@@ -57,9 +60,9 @@ export function useCompanion() {
   const [baseState, setBaseState] = useState(() => {
     // Check if active Focus timer exists on page load
     try {
-      const savedTimer = localStorage.getItem(FOCUS_TIMER_KEY);
+      const savedTimer = scopedStorage.getItem(FOCUS_TIMER_KEY);
       if (savedTimer) {
-        const parsed = JSON.parse(savedTimer);
+        const parsed = typeof savedTimer === "string" ? JSON.parse(savedTimer) : savedTimer;
         if (parsed.status === "running") {
           return parsed.mode === "focus" ? COMPANION_STATES.FOCUSING : COMPANION_STATES.BREAK;
         }
@@ -226,9 +229,9 @@ export function useCompanion() {
   // 6. Overdue Tasks Check Helper
   const checkOverdueTasks = useCallback(() => {
     try {
-      const stored = localStorage.getItem(TASKS_KEY);
+      const stored = scopedStorage.getItem(TASKS_KEY);
       if (!stored) return;
-      const tasks = JSON.parse(stored);
+      const tasks = typeof stored === "string" ? JSON.parse(stored) : stored;
       if (!Array.isArray(tasks)) return;
 
       const now = new Date();

@@ -55,6 +55,8 @@ export function CompanionBehavior({ avatarConfig = {}, state = "IDLE", size = 10
       style={{
         width: `${size}px`,
         height: `${size}px`,
+        maxWidth: "100%",
+        maxHeight: "100%",
         aspectRatio: "1 / 1",
         position: "relative",
         backgroundColor: "var(--color-cream)",
@@ -64,7 +66,8 @@ export function CompanionBehavior({ avatarConfig = {}, state = "IDLE", size = 10
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        userSelect: "none"
+        userSelect: "none",
+        boxSizing: "border-box"
       }}
     >
       {/* Decorative Grid Texture */}

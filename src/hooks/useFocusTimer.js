@@ -8,19 +8,36 @@ import {
   isTodayDate,
   playFocusChime
 } from "../data/focusSettings";
+import { scopedStorage } from "../utils/storage";
+import { apiClient } from "../utils/apiClient";
+import { authService } from "../utils/authService";
 
-const SETTINGS_KEY = "pixeldesk_focus_settings";
-const SESSIONS_KEY = "pixeldesk_focus_sessions";
-const TIMER_STATE_KEY = "pixeldesk_focus_timer_state";
-const TASKS_STORAGE_KEY = "pixeldesk_tasks";
+const SETTINGS_KEY = "focus_settings";
+const SESSIONS_KEY = "focus_sessions";
+const TIMER_STATE_KEY = "focus_timer_state";
+const TASKS_STORAGE_KEY = "tasks";
+
+function normalizeSession(sess) {
+  if (!sess) return null;
+  return {
+    id: sess.id,
+    taskId: sess.task_id || sess.taskId || null,
+    taskTitle: sess.task_title || sess.taskTitle || "Focus Session",
+    durationMinutes: sess.duration_minutes !== undefined ? sess.duration_minutes : (sess.durationMinutes || 25),
+    mode: sess.mode || "focus",
+    type: "focus",
+    completedAt: sess.completed_at || sess.completedAt || new Date().toISOString()
+  };
+}
 
 export function useFocusTimer() {
   // 1. Settings state
   const [settings, setSettings] = useState(() => {
     try {
-      const stored = localStorage.getItem(SETTINGS_KEY);
+      const stored = scopedStorage.getItem(SETTINGS_KEY);
       if (stored) {
-        return { ...DEFAULT_FOCUS_SETTINGS, ...JSON.parse(stored) };
+        const parsed = typeof stored === "string" ? JSON.parse(stored) : stored;
+        return { ...DEFAULT_FOCUS_SETTINGS, ...parsed };
       }
     } catch (err) {
       console.warn("Failed to read focus settings:", err);
@@ -31,10 +48,10 @@ export function useFocusTimer() {
   // 2. Completed sessions history
   const [sessions, setSessions] = useState(() => {
     try {
-      const stored = localStorage.getItem(SESSIONS_KEY);
+      const stored = scopedStorage.getItem(SESSIONS_KEY);
       if (stored) {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed)) return parsed;
+        const parsed = typeof stored === "string" ? JSON.parse(stored) : stored;
+        if (Array.isArray(parsed)) return parsed.map(normalizeSession).filter(Boolean);
       }
     } catch (err) {
       console.warn("Failed to read focus sessions:", err);
@@ -42,12 +59,15 @@ export function useFocusTimer() {
     return [];
   });
 
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSyncing, setIsSyncing] = useState(false);
+
   // 3. Active tasks from Tasks application
   const [activeTasks, setActiveTasks] = useState(() => {
     try {
-      const stored = localStorage.getItem(TASKS_STORAGE_KEY);
+      const stored = scopedStorage.getItem(TASKS_STORAGE_KEY);
       if (stored) {
-        const parsed = JSON.parse(stored);
+        const parsed = typeof stored === "string" ? JSON.parse(stored) : stored;
         if (Array.isArray(parsed)) {
           return parsed.filter((t) => !t.completed);
         }
@@ -58,13 +78,44 @@ export function useFocusTimer() {
     return [];
   });
 
+  // Fetch sessions from backend
+  const fetchSessions = useCallback(async () => {
+    if (!authService.isAuthenticated()) {
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      setIsSyncing(true);
+      const remoteSessions = await apiClient.focus.list();
+      if (Array.isArray(remoteSessions)) {
+        const normalized = remoteSessions.map(normalizeSession).filter(Boolean);
+        setSessions(normalized);
+        try {
+          scopedStorage.setItem(SESSIONS_KEY, normalized);
+        } catch (storageErr) {
+          console.error("Failed to cache remote focus sessions:", storageErr);
+        }
+      }
+    } catch (err) {
+      console.warn("Backend focus sessions fetch failed, using cached data:", err.message);
+    } finally {
+      setIsLoading(false);
+      setIsSyncing(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchSessions();
+  }, [fetchSessions]);
+
   // Listen to Tasks app custom events to refresh active task list
   useEffect(() => {
     const handleTaskChange = () => {
       try {
-        const stored = localStorage.getItem(TASKS_STORAGE_KEY);
+        const stored = scopedStorage.getItem(TASKS_STORAGE_KEY);
         if (stored) {
-          const parsed = JSON.parse(stored);
+          const parsed = typeof stored === "string" ? JSON.parse(stored) : stored;
           if (Array.isArray(parsed)) {
             setActiveTasks(parsed.filter((t) => !t.completed));
           }
@@ -78,12 +129,12 @@ export function useFocusTimer() {
     return () => window.removeEventListener("pixeldesk_task_event", handleTaskChange);
   }, []);
 
-  // Helper to read initial timer state from localStorage synchronously
+  // Helper to read initial timer state from scopedStorage synchronously
   const [initialSnapshot] = useState(() => {
     try {
-      const saved = localStorage.getItem(TIMER_STATE_KEY);
+      const saved = scopedStorage.getItem(TIMER_STATE_KEY);
       if (saved) {
-        const parsed = JSON.parse(saved);
+        const parsed = typeof saved === "string" ? JSON.parse(saved) : saved;
         if (parsed.status === TIMER_STATUS.RUNNING && parsed.endTime) {
           const now = Date.now();
           const diff = Math.max(0, Math.ceil((parsed.endTime - now) / 1000));
@@ -139,7 +190,7 @@ export function useFocusTimer() {
   // Save settings when changed
   useEffect(() => {
     try {
-      localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+      scopedStorage.setItem(SETTINGS_KEY, settings);
     } catch (err) {
       console.error("Failed to save focus settings:", err);
     }
@@ -148,7 +199,7 @@ export function useFocusTimer() {
   // Save sessions when changed
   useEffect(() => {
     try {
-      localStorage.setItem(SESSIONS_KEY, JSON.stringify(sessions));
+      scopedStorage.setItem(SESSIONS_KEY, sessions);
     } catch (err) {
       console.error("Failed to save focus sessions:", err);
     }
@@ -181,7 +232,7 @@ export function useFocusTimer() {
         selectedTask,
         ...stateUpdates
       };
-      localStorage.setItem(TIMER_STATE_KEY, JSON.stringify(snapshot));
+      scopedStorage.setItem(TIMER_STATE_KEY, snapshot);
     } catch (err) {
       console.error("Failed to save timer state:", err);
     }
@@ -190,14 +241,14 @@ export function useFocusTimer() {
   // Clear timer snapshot
   const clearTimerState = useCallback(() => {
     try {
-      localStorage.removeItem(TIMER_STATE_KEY);
+      scopedStorage.removeItem(TIMER_STATE_KEY);
     } catch (err) {
       console.error("Failed to clear timer state:", err);
     }
   }, []);
 
   // Complete session handler
-  const handleSessionComplete = useCallback(() => {
+  const handleSessionComplete = useCallback(async () => {
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
@@ -217,15 +268,59 @@ export function useFocusTimer() {
 
     // Record session if it was a focus session
     if (mode === FOCUS_MODES.FOCUS) {
+      const tempId = `sess_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+      const completedAtIso = new Date().toISOString();
+      const taskTitle = selectedTask ? selectedTask.title : "Focus Session";
+      const taskId = selectedTask ? selectedTask.id : null;
+
       const newSession = {
-        id: `sess_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+        id: tempId,
         type: "focus",
         durationMinutes: settings.focusDuration,
-        completedAt: new Date().toISOString(),
-        taskId: selectedTask ? selectedTask.id : null,
-        taskTitle: selectedTask ? selectedTask.title : "Focus Session"
+        completedAt: completedAtIso,
+        taskId: taskId,
+        taskTitle: taskTitle
       };
+
       setSessions((prev) => [newSession, ...prev]);
+
+      // Backend sync
+      if (authService.isAuthenticated()) {
+        try {
+          setIsSyncing(true);
+          const payload = {
+            duration_minutes: settings.focusDuration,
+            task_id: taskId,
+            task_title: taskTitle,
+            mode: "focus",
+            completed_at: completedAtIso
+          };
+
+          let remote = null;
+          try {
+            remote = await apiClient.focus.log(payload);
+          } catch (logErr) {
+            // If linking failed due to non-backend task ID, retry without task_id
+            if (taskId) {
+              remote = await apiClient.focus.log({
+                ...payload,
+                task_id: null
+              });
+            } else {
+              throw logErr;
+            }
+          }
+
+          if (remote && remote.id) {
+            const synced = normalizeSession(remote);
+            setSessions((prev) => prev.map((s) => (s.id === tempId ? synced : s)));
+          }
+        } catch (err) {
+          console.warn("Backend focus session log failed:", err.message);
+        } finally {
+          setIsSyncing(false);
+        }
+      }
     }
 
     emitCompanionEvent("COMPLETED", {
@@ -420,6 +515,9 @@ export function useFocusTimer() {
     settings,
     updateSettings,
     sessions,
+    isLoading,
+    isSyncing,
+    refreshSessions: fetchSessions,
     todayStats,
     announceMessage,
     startTimer,

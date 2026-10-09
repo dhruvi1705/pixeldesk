@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { authService } from "../utils/authService";
 
 export function LaunchPage() {
   const navigate = useNavigate();
@@ -243,7 +244,7 @@ export function LaunchPage() {
           {/* Main Enter Button (Coral #E76F51) */}
           <button
             type="button"
-            onClick={() => navigate("/login")}
+            onClick={() => navigate(authService.isAuthenticated() ? "/desktop" : "/login")}
             className="pixel-button pixel-button-primary"
             style={{
               width: "100%",
@@ -255,24 +256,6 @@ export function LaunchPage() {
             disabled={!bootComplete}
           >
             [ ENTER PIXELDESK ]
-          </button>
-
-          {/* Continue as Demo Option */}
-          <button
-            type="button"
-            onClick={() => navigate("/desktop")}
-            className="pixel-button"
-            style={{
-              backgroundColor: "transparent",
-              border: "1px dashed var(--border-subtle)",
-              color: "var(--color-cream)",
-              fontSize: "9px",
-              padding: "8px 14px",
-              boxShadow: "none"
-            }}
-            disabled={!bootComplete}
-          >
-            ▶ Continue as Demo
           </button>
         </div>
 

@@ -2,23 +2,46 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   getStarterTransactions
 } from "../data/financeCategories";
+import { scopedStorage } from "../utils/storage";
+import { apiClient } from "../utils/apiClient";
+import { authService } from "../utils/authService";
 
-const STORAGE_KEY = "pixeldesk_transactions";
+const STORAGE_KEY = "transactions";
+
+function normalizeTransaction(tx) {
+  if (!tx) return null;
+  return {
+    id: tx.id,
+    type: tx.type === "income" ? "income" : "expense",
+    amount: Number(tx.amount) || 0,
+    category: tx.category || "Other",
+    date: typeof tx.date === "string" ? tx.date : String(tx.date),
+    description: tx.description || "",
+    createdAt: tx.created_at || tx.createdAt || new Date().toISOString(),
+    updatedAt: tx.updated_at || tx.updatedAt || new Date().toISOString()
+  };
+}
 
 export function useFinance() {
   // 1. Transactions state
   const [transactions, setTransactions] = useState(() => {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
+      const stored = scopedStorage.getItem(STORAGE_KEY);
       if (stored) {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed)) return parsed;
+        const parsed = typeof stored === "string" ? JSON.parse(stored) : stored;
+        if (Array.isArray(parsed)) {
+          return parsed.map(normalizeTransaction).filter(Boolean);
+        }
       }
     } catch (err) {
-      console.warn("Failed to load transactions from localStorage:", err);
+      console.warn("Failed to load transactions from scopedStorage:", err);
     }
-    return getStarterTransactions();
+    return [];
   });
+
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [error, setError] = useState(null);
 
   // Current system year and month
   const [currentYear] = useState(() => new Date().getFullYear());
@@ -35,10 +58,43 @@ export function useFinance() {
   const [typeFilter, setTypeFilter] = useState("ALL"); // "ALL" | "INCOME" | "EXPENSES"
   const [categoryFilter, setCategoryFilter] = useState("ALL");
 
-  // Persist to localStorage on change and notify listeners
+  // Fetch transactions from authenticated API
+  const fetchTransactions = useCallback(async () => {
+    if (!authService.isAuthenticated()) {
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      setIsSyncing(true);
+      setError(null);
+      const remoteTxs = await apiClient.finance.list();
+      if (Array.isArray(remoteTxs)) {
+        const normalized = remoteTxs.map(normalizeTransaction).filter(Boolean);
+        setTransactions(normalized);
+        try {
+          scopedStorage.setItem(STORAGE_KEY, normalized);
+        } catch (storageErr) {
+          console.error("Failed to cache remote transactions:", storageErr);
+        }
+      }
+    } catch (err) {
+      console.warn("Backend finance fetch failed, using cached data:", err.message);
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+      setIsSyncing(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchTransactions();
+  }, [fetchTransactions]);
+
+  // Persist to scopedStorage on change and notify listeners
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
+      scopedStorage.setItem(STORAGE_KEY, transactions);
       if (typeof window !== "undefined") {
         window.dispatchEvent(
           new CustomEvent("pixeldesk_finance_event", {
@@ -47,7 +103,7 @@ export function useFinance() {
         );
       }
     } catch (err) {
-      console.error("Failed to save transactions to localStorage:", err);
+      console.error("Failed to save transactions to scopedStorage:", err);
     }
   }, [transactions]);
 
@@ -185,7 +241,7 @@ export function useFinance() {
   }, [monthTransactions, typeFilter, categoryFilter, searchQuery]);
 
   // Create transaction
-  const createTransaction = useCallback((data) => {
+  const createTransaction = useCallback(async (data) => {
     const numAmount = parseFloat(data.amount);
     if (isNaN(numAmount) || numAmount <= 0) {
       return { success: false, error: "Please enter a valid amount greater than 0." };
@@ -197,8 +253,9 @@ export function useFinance() {
       return { success: false, error: "Please choose a date." };
     }
 
+    const tempId = `tx_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
     const newTx = {
-      id: `tx_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+      id: tempId,
       type: data.type === "income" ? "income" : "expense",
       amount: numAmount,
       category: data.category,
@@ -208,6 +265,7 @@ export function useFinance() {
       updatedAt: new Date().toISOString()
     };
 
+    // Optimistic UI update
     setTransactions((prev) => [newTx, ...prev]);
 
     // Keep month view synced if transaction is in a different month
@@ -217,11 +275,29 @@ export function useFinance() {
       setSelectedMonth(m - 1);
     }
 
+    // Backend sync
+    if (authService.isAuthenticated()) {
+      try {
+        setIsSyncing(true);
+        const remote = await apiClient.finance.create(newTx);
+        if (remote && remote.id) {
+          const synced = normalizeTransaction(remote);
+          setTransactions((prev) => prev.map((t) => (t.id === tempId ? synced : t)));
+          return { success: true, transaction: synced };
+        }
+      } catch (err) {
+        console.warn("Backend finance creation failed:", err.message);
+        setError(err.message);
+      } finally {
+        setIsSyncing(false);
+      }
+    }
+
     return { success: true, transaction: newTx };
   }, []);
 
   // Update transaction
-  const updateTransaction = useCallback((id, updates) => {
+  const updateTransaction = useCallback(async (id, updates) => {
     const numAmount = updates.amount !== undefined ? parseFloat(updates.amount) : undefined;
     if (numAmount !== undefined && (isNaN(numAmount) || numAmount <= 0)) {
       return { success: false, error: "Amount must be greater than 0." };
@@ -245,14 +321,42 @@ export function useFinance() {
     );
 
     if (updatedTx) {
+      if (authService.isAuthenticated()) {
+        try {
+          setIsSyncing(true);
+          const remote = await apiClient.finance.update(id, updates);
+          if (remote) {
+            const synced = normalizeTransaction(remote);
+            setTransactions((prev) => prev.map((t) => (t.id === id ? synced : t)));
+          }
+        } catch (err) {
+          console.warn("Backend finance update failed:", err.message);
+          setError(err.message);
+        } finally {
+          setIsSyncing(false);
+        }
+      }
+
       return { success: true, transaction: updatedTx };
     }
     return { success: false, error: "Transaction not found." };
   }, []);
 
   // Delete transaction
-  const deleteTransaction = useCallback((id) => {
+  const deleteTransaction = useCallback(async (id) => {
     setTransactions((prev) => prev.filter((tx) => tx.id !== id));
+
+    if (authService.isAuthenticated()) {
+      try {
+        setIsSyncing(true);
+        await apiClient.finance.delete(id);
+      } catch (err) {
+        console.warn("Backend finance delete failed:", err.message);
+        setError(err.message);
+      } finally {
+        setIsSyncing(false);
+      }
+    }
   }, []);
 
   // Reset to starter transactions
@@ -266,6 +370,10 @@ export function useFinance() {
 
   return {
     transactions,
+    isLoading,
+    isSyncing,
+    error,
+    refreshTransactions: fetchTransactions,
     filteredTransactions,
     monthSummary,
     overallSummary,

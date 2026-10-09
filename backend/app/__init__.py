@@ -1,0 +1,1 @@
+"""PixelDesk FastAPI Application Package."""

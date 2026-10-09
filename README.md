@@ -21,6 +21,7 @@ PixelDesk is designed around a curated, mature 8-bit color palette with crisp pi
 
 ## 🛠️ Technology Stack
 
+### Frontend
 - **Framework:** [React 19](https://react.dev/) (Functional components, hooks, custom state management)
 - **Bundler & Build Tool:** [Vite 8](https://vite.dev/)
 - **Language:** JavaScript (ES Modules)
@@ -28,6 +29,14 @@ PixelDesk is designed around a curated, mature 8-bit color palette with crisp pi
 - **Icons:** Unicode retro emojis & [Lucide React](https://lucide.dev/)
 - **Linter:** [Oxlint](https://oxc.rs/) for high-speed static code analysis
 - **Data Persistence:** Browser `localStorage` (Client-side, privacy-first)
+
+### Backend Foundation (New)
+- **Framework:** [FastAPI](https://fastapi.tiangolo.com/) (Python 3.11+)
+- **Server:** [Uvicorn](https://www.uvicorn.org/)
+- **Database ORM & Driver:** [SQLAlchemy 2.0](https://www.sqlalchemy.org/) (Async) with `asyncpg`
+- **Configuration:** [Pydantic Settings](https://docs.pydantic.dev/) v2
+- **Testing:** [pytest](https://docs.pytest.org/) & [HTTPX](https://www.python-httpx.org/)
+- **Containerization:** Docker & Docker Compose (PostgreSQL 16)
 
 ---
 
@@ -163,6 +172,26 @@ Preview the production build locally:
 
 ```bash
 npm run preview
+```
+
+### Backend Development (FastAPI)
+
+Start the Python backend and PostgreSQL database:
+
+```bash
+# 1. Start local PostgreSQL
+docker compose up -d db
+
+# 2. Setup backend environment and install dependencies
+cd backend
+cp .env.example .env
+pip install -r requirements.txt
+
+# 3. Start FastAPI development server
+uvicorn app.main:app --reload --port 8000
+
+# 4. Run backend tests
+pytest tests
 ```
 
 ---

@@ -3,24 +3,47 @@ import {
   getLocalDateString,
   getStarterEvents
 } from "../data/calendarCategories";
+import { scopedStorage } from "../utils/storage";
+import { apiClient } from "../utils/apiClient";
+import { authService } from "../utils/authService";
 
-const STORAGE_KEY = "pixeldesk_events";
+const STORAGE_KEY = "events";
+
+function normalizeEvent(evt) {
+  if (!evt) return null;
+  return {
+    id: evt.id,
+    title: evt.title || "",
+    description: evt.description || "",
+    category: evt.category || "Other",
+    date: typeof evt.date === "string" ? evt.date : String(evt.date),
+    startTime: evt.start_time !== undefined ? (evt.start_time || "") : (evt.startTime || ""),
+    endTime: evt.end_time !== undefined ? (evt.end_time || "") : (evt.endTime || ""),
+    allDay: evt.all_day !== undefined ? Boolean(evt.all_day) : Boolean(evt.allDay),
+    createdAt: evt.created_at || evt.createdAt || new Date().toISOString(),
+    updatedAt: evt.updated_at || evt.updatedAt || new Date().toISOString()
+  };
+}
 
 export function useCalendar() {
   const [events, setEvents] = useState(() => {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
+      const stored = scopedStorage.getItem(STORAGE_KEY);
       if (stored) {
-        const parsed = JSON.parse(stored);
+        const parsed = typeof stored === "string" ? JSON.parse(stored) : stored;
         if (Array.isArray(parsed)) {
-          return parsed;
+          return parsed.map(normalizeEvent).filter(Boolean);
         }
       }
     } catch (err) {
-      console.warn("Failed to read events from localStorage:", err);
+      console.warn("Failed to read events from scopedStorage:", err);
     }
-    return getStarterEvents();
+    return [];
   });
+
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [error, setError] = useState(null);
 
   // Active view: month (0-11) and full year
   const [viewYear, setViewYear] = useState(() => new Date().getFullYear());
@@ -29,12 +52,45 @@ export function useCalendar() {
   // Selected date: YYYY-MM-DD
   const [selectedDate, setSelectedDate] = useState(() => getLocalDateString());
 
-  // Persist to localStorage whenever events change
+  // Fetch events from authenticated API
+  const fetchEvents = useCallback(async () => {
+    if (!authService.isAuthenticated()) {
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      setIsSyncing(true);
+      setError(null);
+      const remoteEvents = await apiClient.calendar.list();
+      if (Array.isArray(remoteEvents)) {
+        const normalized = remoteEvents.map(normalizeEvent).filter(Boolean);
+        setEvents(normalized);
+        try {
+          scopedStorage.setItem(STORAGE_KEY, normalized);
+        } catch (storageErr) {
+          console.error("Failed to cache remote events:", storageErr);
+        }
+      }
+    } catch (err) {
+      console.warn("Backend calendar fetch failed, using cached events:", err.message);
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+      setIsSyncing(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchEvents();
+  }, [fetchEvents]);
+
+  // Persist to scopedStorage whenever events change
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(events));
+      scopedStorage.setItem(STORAGE_KEY, events);
     } catch (err) {
-      console.error("Failed to save events to localStorage:", err);
+      console.error("Failed to save events to scopedStorage:", err);
     }
   }, [events]);
 
@@ -80,7 +136,7 @@ export function useCalendar() {
   }, [setViewYear, setViewMonth, setSelectedDate]);
 
   // Create an event
-  const createEvent = useCallback((eventData) => {
+  const createEvent = useCallback(async (eventData) => {
     const trimmedTitle = (eventData.title || "").trim();
     if (!trimmedTitle) {
       return { success: false, error: "Event title is required." };
@@ -100,8 +156,9 @@ export function useCalendar() {
       return { success: false, error: "End time cannot be earlier than start time." };
     }
 
+    const tempId = `evt_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
     const newEvent = {
-      id: `evt_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+      id: tempId,
       title: trimmedTitle,
       date: eventData.date,
       startTime,
@@ -113,6 +170,7 @@ export function useCalendar() {
       updatedAt: new Date().toISOString()
     };
 
+    // Optimistic UI update
     setEvents((prev) => [newEvent, ...prev]);
     setSelectedDate(eventData.date);
 
@@ -124,11 +182,30 @@ export function useCalendar() {
     }
 
     emitCalendarEvent("eventCreated", newEvent);
+
+    // Sync with backend if authenticated
+    if (authService.isAuthenticated()) {
+      try {
+        setIsSyncing(true);
+        const remote = await apiClient.calendar.create(newEvent);
+        if (remote && remote.id) {
+          const synced = normalizeEvent(remote);
+          setEvents((prev) => prev.map((e) => (e.id === tempId ? synced : e)));
+          return { success: true, event: synced };
+        }
+      } catch (err) {
+        console.warn("Backend event creation failed:", err.message);
+        setError(err.message);
+      } finally {
+        setIsSyncing(false);
+      }
+    }
+
     return { success: true, event: newEvent };
   }, []);
 
   // Update an existing event
-  const updateEvent = useCallback((id, updates) => {
+  const updateEvent = useCallback(async (id, updates) => {
     const trimmedTitle = updates.title !== undefined ? updates.title.trim() : undefined;
     if (trimmedTitle !== undefined && !trimmedTitle) {
       return { success: false, error: "Event title cannot be empty." };
@@ -167,13 +244,30 @@ export function useCalendar() {
 
     if (updatedEvent) {
       emitCalendarEvent("eventUpdated", updatedEvent);
+
+      if (authService.isAuthenticated()) {
+        try {
+          setIsSyncing(true);
+          const remote = await apiClient.calendar.update(id, updates);
+          if (remote) {
+            const synced = normalizeEvent(remote);
+            setEvents((prev) => prev.map((e) => (e.id === id ? synced : e)));
+          }
+        } catch (err) {
+          console.warn("Backend calendar update failed:", err.message);
+          setError(err.message);
+        } finally {
+          setIsSyncing(false);
+        }
+      }
+
       return { success: true, event: updatedEvent };
     }
     return { success: false, error: "Event not found." };
   }, []);
 
   // Delete an event
-  const deleteEvent = useCallback((id) => {
+  const deleteEvent = useCallback(async (id) => {
     let deleted = null;
     setEvents((prev) => {
       deleted = prev.find((e) => e.id === id);
@@ -182,6 +276,19 @@ export function useCalendar() {
 
     if (deleted) {
       emitCalendarEvent("eventDeleted", deleted);
+
+      if (authService.isAuthenticated()) {
+        try {
+          setIsSyncing(true);
+          await apiClient.calendar.delete(id);
+        } catch (err) {
+          console.warn("Backend calendar delete failed:", err.message);
+          setError(err.message);
+        } finally {
+          setIsSyncing(false);
+        }
+      }
+
       return { success: true };
     }
     return { success: false };
@@ -236,6 +343,10 @@ export function useCalendar() {
 
   return {
     events,
+    isLoading,
+    isSyncing,
+    error,
+    refreshEvents: fetchEvents,
     viewYear,
     viewMonth,
     selectedDate,

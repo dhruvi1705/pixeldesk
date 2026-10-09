@@ -97,22 +97,6 @@ export function CalendarWindow({ onClose: _onClose }) {
           </p>
         </div>
 
-        {/* Quick starter reset / count */}
-        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-          <button
-            type="button"
-            onClick={loadStarterEvents}
-            className="pixel-button pixel-button-sm"
-            style={{
-              fontFamily: "var(--font-pixel)",
-              fontSize: "7.5px",
-              padding: "3px 6px"
-            }}
-            title="Reset to starter calendar demo events"
-          >
-            ↺ DEMO DATA
-          </button>
-        </div>
       </header>
 
       {/* Main Body: If form is open, show form overlay; else show grid + day events */}

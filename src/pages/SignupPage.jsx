@@ -1,10 +1,87 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { AuthWindow } from "../components/AuthWindow";
 import { PixelInput } from "../components/PixelInput";
+import { authService } from "../utils/authService";
+
+const COMMON_WEAK_PASSWORDS = new Set([
+  "password",
+  "password1",
+  "password123",
+  "password123!",
+  "12345678",
+  "123456789",
+  "1234567890",
+  "87654321",
+  "qwertyui",
+  "qwerty123",
+  "admin123",
+  "admin123!",
+  "administrator",
+  "letmein123",
+  "letmein123!",
+  "pixeldesk",
+  "pixeldesk123",
+  "pixeldesk123!",
+  "welcome1",
+  "welcome123",
+  "welcome123!",
+  "iloveyou",
+  "iloveyou123!",
+  "sunshine1",
+  "princess1",
+  "football1",
+  "monkey123",
+  "changeme",
+  "changeme123",
+  "passphrase",
+  "master123",
+  "p@ssw0rd123!"
+]);
+
+function validatePasswordCriteria(pwd) {
+  if (!pwd) {
+    return "Password is required.";
+  }
+  if (!pwd.trim()) {
+    return "Password cannot consist solely of whitespace.";
+  }
+  if (pwd.length < 8) {
+    return "Password must be at least 8 characters.";
+  }
+  if (pwd.length > 128) {
+    return "Password cannot exceed 128 characters.";
+  }
+  try {
+    const encoder = new TextEncoder();
+    if (encoder.encode(pwd).length > 72) {
+      return "Password exceeds the maximum 72-byte limit for secure hashing.";
+    }
+  } catch {}
+  if (!/[A-Z]/.test(pwd)) {
+    return "Password must contain at least one uppercase letter (A–Z).";
+  }
+  if (!/[a-z]/.test(pwd)) {
+    return "Password must contain at least one lowercase letter (a–z).";
+  }
+  if (!/[0-9]/.test(pwd)) {
+    return "Password must contain at least one number (0–9).";
+  }
+  if (!/[^A-Za-z0-9\s]/.test(pwd)) {
+    return "Password must contain at least one special character (e.g. @, #, $, %, !, &).";
+  }
+  if (COMMON_WEAK_PASSWORDS.has(pwd.toLowerCase())) {
+    return "Password is too common or easily guessed. Please choose a stronger password.";
+  }
+  if (new Set(pwd).size === 1) {
+    return "Password cannot consist of a single repeated character.";
+  }
+  return null;
+}
 
 export function SignupPage() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Form State
   const [username, setUsername] = useState("");
@@ -12,9 +89,9 @@ export function SignupPage() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [errors, setErrors] = useState({});
-  const [infoMessage, setInfoMessage] = useState(null);
+  const [serverError, setServerError] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Frontend validation only
   const validateForm = () => {
     const newErrors = {};
 
@@ -30,10 +107,9 @@ export function SignupPage() {
       newErrors.email = "Enter a valid email address";
     }
 
-    if (!password) {
-      newErrors.password = "Password is required";
-    } else if (password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters";
+    const passwordError = validatePasswordCriteria(password);
+    if (passwordError) {
+      newErrors.password = passwordError;
     }
 
     if (!confirmPassword) {
@@ -46,19 +122,31 @@ export function SignupPage() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSignupSubmit = (e) => {
+  const handleSignupSubmit = async (e) => {
     e.preventDefault();
-    setInfoMessage(null);
+    setServerError(null);
 
-    if (validateForm()) {
-      // Per instructions: Do NOT create an account in a database, do NOT pretend account was created
-      setInfoMessage("Account creation will be available when the PixelDesk backend is connected.");
+    if (!validateForm()) return;
+
+    setIsLoading(true);
+    try {
+      const result = await authService.signup({ username, email, password });
+      if (result.success) {
+        const from = location.state?.from?.pathname || location.state?.from || "/desktop";
+        navigate(from, { replace: true });
+      } else {
+        setServerError(result.error);
+      }
+    } catch {
+      setServerError("An unexpected error occurred during signup. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
     <AuthWindow title="PIXELDESK // SIGN UP" icon="📝" backTo="/login">
-      <div style={{ textAlign: "center", marginBottom: "16px" }}>
+      <div style={{ textAlign: "center", marginBottom: "14px" }}>
         <h2
           style={{
             fontFamily: "var(--font-pixel)",
@@ -80,14 +168,14 @@ export function SignupPage() {
         </p>
       </div>
 
-      {/* Prototype Information Notice Banner */}
-      {infoMessage && (
+      {/* Server Error / Notice Banner */}
+      {serverError && (
         <div
-          role="status"
+          role="alert"
           aria-live="polite"
           style={{
-            backgroundColor: "var(--color-yellow-light)",
-            border: "2px solid var(--color-yellow-dark)",
+            backgroundColor: "var(--color-coral-light, #ffe8e4)",
+            border: "2px solid var(--color-coral, #e76f51)",
             padding: "10px 12px",
             marginBottom: "14px",
             display: "flex",
@@ -96,9 +184,9 @@ export function SignupPage() {
             boxShadow: "1px 1px 0 var(--shadow)"
           }}
         >
-          <span style={{ fontSize: "16px" }}>ℹ️</span>
+          <span style={{ fontSize: "16px" }}>⚠️</span>
           <div style={{ fontSize: "12px", color: "var(--color-navy)", lineHeight: 1.4 }}>
-            <strong>Prototype Notice:</strong> {infoMessage}
+            <strong>Registration Notice:</strong> {serverError}
           </div>
         </div>
       )}
@@ -107,17 +195,19 @@ export function SignupPage() {
       <form onSubmit={handleSignupSubmit} noValidate style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
         <PixelInput
           id="signup-username"
-          label="Username"
+          label="Username / Display Name"
           type="text"
           value={username}
           onChange={(e) => {
             setUsername(e.target.value);
             if (errors.username) setErrors((prev) => ({ ...prev, username: null }));
+            if (serverError) setServerError(null);
           }}
           placeholder="pixel_user"
           error={errors.username}
           required
           autoComplete="username"
+          disabled={isLoading}
         />
 
         <PixelInput
@@ -128,27 +218,59 @@ export function SignupPage() {
           onChange={(e) => {
             setEmail(e.target.value);
             if (errors.email) setErrors((prev) => ({ ...prev, email: null }));
+            if (serverError) setServerError(null);
           }}
           placeholder="student@pixeldesk.dev"
           error={errors.email}
           required
           autoComplete="email"
+          disabled={isLoading}
         />
 
-        <PixelInput
-          id="signup-password"
-          label="Password"
-          type="password"
-          value={password}
-          onChange={(e) => {
-            setPassword(e.target.value);
-            if (errors.password) setErrors((prev) => ({ ...prev, password: null }));
-          }}
-          placeholder="At least 6 characters"
-          error={errors.password}
-          required
-          autoComplete="new-password"
-        />
+        <div>
+          <PixelInput
+            id="signup-password"
+            label="Password"
+            type="password"
+            value={password}
+            onChange={(e) => {
+              setPassword(e.target.value);
+              if (errors.password) setErrors((prev) => ({ ...prev, password: null }));
+              if (serverError) setServerError(null);
+            }}
+            placeholder="Min 8 chars (e.g. Secret123!)"
+            error={errors.password}
+            required
+            autoComplete="new-password"
+            disabled={isLoading}
+          />
+
+          {/* Password Policy Helper Box */}
+          <div
+            style={{
+              marginTop: "4px",
+              padding: "6px 8px",
+              backgroundColor: "var(--surface-dark, #161F2E)",
+              border: "1px solid var(--border-subtle, #2C3E55)",
+              fontSize: "11px",
+              fontFamily: "var(--font-retro, sans-serif)",
+              color: "var(--text-secondary, #A4B3C6)",
+              lineHeight: 1.35
+            }}
+          >
+            <div style={{ fontFamily: "var(--font-pixel)", fontSize: "8px", color: "var(--color-teal)", marginBottom: "3px" }}>
+              PASSWORD REQUIREMENTS:
+            </div>
+            <ul style={{ margin: 0, paddingLeft: "14px" }}>
+              <li>8 to 128 characters (max 72 bytes)</li>
+              <li>At least one uppercase letter (A–Z)</li>
+              <li>At least one lowercase letter (a–z)</li>
+              <li>At least one number (0–9)</li>
+              <li>At least one special character (e.g. @, #, $, %, !, &)</li>
+              <li>Avoid common or easily guessed passwords</li>
+            </ul>
+          </div>
+        </div>
 
         <PixelInput
           id="signup-confirm-password"
@@ -158,48 +280,25 @@ export function SignupPage() {
           onChange={(e) => {
             setConfirmPassword(e.target.value);
             if (errors.confirmPassword) setErrors((prev) => ({ ...prev, confirmPassword: null }));
+            if (serverError) setServerError(null);
           }}
           placeholder="Re-enter password"
           error={errors.confirmPassword}
           required
           autoComplete="new-password"
+          disabled={isLoading}
         />
 
         {/* Submit Button (Coral #E76F51) */}
         <button
           type="submit"
           className="pixel-button pixel-button-primary"
+          disabled={isLoading}
           style={{ width: "100%", padding: "10px", marginTop: "4px" }}
         >
-          [ CREATE ACCOUNT ]
+          {isLoading ? "[ CREATING ACCOUNT... ]" : "[ CREATE ACCOUNT ]"}
         </button>
       </form>
-
-      {/* Divider */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          margin: "16px 0",
-          color: "var(--text-secondary)",
-          fontFamily: "var(--font-retro)",
-          fontSize: "14px"
-        }}
-      >
-        <div style={{ flex: 1, height: "1px", backgroundColor: "var(--border)" }} />
-        <span style={{ padding: "0 10px" }}>or</span>
-        <div style={{ flex: 1, height: "1px", backgroundColor: "var(--border)" }} />
-      </div>
-
-      {/* Continue as Demo Action Button */}
-      <button
-        type="button"
-        onClick={() => navigate("/desktop")}
-        className="pixel-button pixel-button-teal"
-        style={{ width: "100%", padding: "9px" }}
-      >
-        [ CONTINUE AS DEMO ]
-      </button>
 
       {/* Footer Navigation Link */}
       <div
