@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { TASK_CATEGORIES, TASK_PRIORITIES } from "../../data/taskCategories";
 
 export function TaskForm({
@@ -14,16 +14,6 @@ export function TaskForm({
   const [priority, setPriority] = useState(initialTask?.priority || "Medium");
   const [category, setCategory] = useState(initialTask?.category || "Other");
   const [error, setError] = useState("");
-
-  useEffect(() => {
-    if (initialTask) {
-      setTitle(initialTask.title || "");
-      setDescription(initialTask.description || "");
-      setDueDate(initialTask.dueDate || "");
-      setPriority(initialTask.priority || "Medium");
-      setCategory(initialTask.category || "Other");
-    }
-  }, [initialTask]);
 
   const handleSubmit = (e) => {
     e.preventDefault();

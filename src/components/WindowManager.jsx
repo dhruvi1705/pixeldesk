@@ -11,6 +11,7 @@ import { CalendarWindow } from "./calendar/CalendarWindow";
 import { FocusWindow } from "./focus/FocusWindow";
 import { FinanceWindow } from "./finance/FinanceWindow";
 import { AnalyticsWindow } from "./analytics/AnalyticsWindow";
+import { CopilotWindow } from "./copilot/CopilotWindow";
 import { APPS } from "../data/apps";
 
 export function WindowManager({
@@ -114,6 +115,13 @@ export function WindowManager({
             <AnalyticsWindow
               onClose={() => onCloseWindow("analytics")}
               onOpenApp={onOpenApp}
+            />
+          );
+        } else if (win.id === "copilot") {
+          defaultWidth = 540;
+          content = (
+            <CopilotWindow
+              onClose={() => onCloseWindow("copilot")}
             />
           );
         } else if (win.id === "help") {

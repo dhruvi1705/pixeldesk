@@ -5,7 +5,7 @@ import { AvatarControls } from "./AvatarControls";
 import { AVATAR_CATEGORIES } from "../../data/avatarOptions";
 import { useAvatar } from "../../hooks/useAvatar";
 
-export function AvatarStudio({ onClose }) {
+export function AvatarStudio({ onClose: _onClose }) {
   const {
     avatarConfig,
     updateCategory,

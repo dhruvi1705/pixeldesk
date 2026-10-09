@@ -7,7 +7,7 @@ import { TaskList } from "./TaskList";
 import { TaskForm } from "./TaskForm";
 import { getLocalDateString } from "../../data/taskCategories";
 
-export function TaskWindow({ onClose }) {
+export function TaskWindow({ onClose: _onClose }) {
   const {
     tasks,
     filteredTasks,

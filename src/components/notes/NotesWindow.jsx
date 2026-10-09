@@ -6,7 +6,7 @@ import { NoteTags } from "./NoteTags";
 import { NotesList } from "./NotesList";
 import { NoteEditor } from "./NoteEditor";
 
-export function NotesWindow({ onClose }) {
+export function NotesWindow({ onClose: _onClose }) {
   const {
     notes,
     filteredNotes,

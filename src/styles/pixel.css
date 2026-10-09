@@ -1036,3 +1036,38 @@
   animation: none !important;
   transform: none !important;
 }
+
+/* ========================================================
+   RESPONSIVE LAYOUT & ACCESSIBILITY ENHANCEMENTS
+   ======================================================== */
+
+@media (max-width: 640px) {
+  .analytics-two-column-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .copilot-prompt-pill {
+    font-size: 11px !important;
+    padding: 3px 6px !important;
+  }
+
+  .pixel-window {
+    max-width: calc(100vw - 16px) !important;
+  }
+
+  .window-body {
+    padding: 10px !important;
+  }
+}
+
+/* Universal High-Visibility Accessibility Focus Rings */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--color-teal) !important;
+  outline-offset: 2px !important;
+}
+

@@ -3,7 +3,7 @@ import { APPS } from "../data/apps";
 
 export function Dock({ openWindows, activeWindowId, onToggleApp }) {
   // Primary dock apps for quick launching
-  const dockAppIds = ["welcome", "avatar", "tasks", "notes", "calendar", "focus", "finance", "analytics", "settings", "help"];
+  const dockAppIds = ["welcome", "avatar", "tasks", "notes", "calendar", "focus", "finance", "analytics", "copilot", "settings", "help"];
   const dockApps = dockAppIds.map(id => APPS.find(a => a.id === id)).filter(Boolean);
 
   return (

@@ -77,14 +77,14 @@ export const APPS = [
     accentType: "yellow"
   },
   {
-    id: "ai",
+    id: "copilot",
     name: "AI Copilot",
     icon: "🤖",
-    badge: "Bot",
-    status: "coming-soon",
-    category: "AI",
-    description: "Monospace pixel assistant to brainstorm ideas, structure notes, and plan sprints.",
-    version: "Planned for Level 2",
+    badge: "Assist",
+    status: "ready",
+    category: "Productivity",
+    description: "Deterministic local workspace assistant for tasks, calendar, focus, and financial productivity summaries.",
+    version: "v0.9 — Foundation",
     accentType: "lavender"
   },
   {
